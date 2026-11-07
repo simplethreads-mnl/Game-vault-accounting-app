@@ -1,0 +1,323 @@
+// Game Vault — accounting, inventory & repair management
+// Double-entry general ledger is the single source of truth for every
+// financial number. Operational tables (inventory, repairs, transactions)
+// always post a balanced JournalEntry through lib/accounting/posting.ts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────────── Chart of accounts ─────────────────────────────
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  CONTRA_REVENUE
+  COGS
+  EXPENSE
+}
+
+model Account {
+  id        String        @id @default(cuid())
+  code      String        @unique // e.g. "1000"
+  name      String
+  type      AccountType
+  /// Reporting bucket used by dashboards (e.g. "SWITCH_SALES", "FOOD")
+  category  String?
+  isSystem  Boolean       @default(false) // cannot be deleted / renamed by users
+  isActive  Boolean       @default(true)
+  lines     JournalLine[]
+  createdAt DateTime      @default(now())
+}
+
+// ───────────────────────────── General ledger ────────────────────────────────
+
+model JournalEntry {
+  id            String        @id @default(cuid())
+  number        Int           @unique @default(autoincrement())
+  date          DateTime
+  memo          String
+  /// Business event that produced the entry
+  transactionId String?
+  transaction   Transaction?  @relation(fields: [transactionId], references: [id])
+  /// When an entry is voided we never delete — we post a reversing entry
+  reversesId    String?       @unique
+  reverses      JournalEntry? @relation("Reversal", fields: [reversesId], references: [id])
+  reversedBy    JournalEntry? @relation("Reversal")
+  lines         JournalLine[]
+  createdBy     String        @default("system")
+  createdAt     DateTime      @default(now())
+
+  @@index([date])
+}
+
+model JournalLine {
+  id        String       @id @default(cuid())
+  entryId   String
+  entry     JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  accountId String
+  account   Account      @relation(fields: [accountId], references: [id])
+  debit     Decimal      @default(0) @db.Decimal(14, 2)
+  credit    Decimal      @default(0) @db.Decimal(14, 2)
+  /// Optional link for drill-down (inventory unit, repair job …)
+  unitId    String?
+  repairId  String?
+  memo      String?
+
+  @@index([accountId])
+  @@index([entryId])
+}
+
+// ───────────────────────────── Business transactions ─────────────────────────
+
+enum TransactionType {
+  PURCHASE          // device purchased for resale (working or broken)
+  SALE              // device / accessory sold
+  REPAIR            // customer repair job invoiced
+  REFURBISH         // parts + labor capitalised into our own inventory unit
+  PARTS_PURCHASE    // parts bought into parts inventory
+  EXPENSE           // operating expense
+  SUPPLIER_PAYMENT  // pay down accounts payable
+  WAGES_PAYMENT     // pay accrued technician labor (clears 2300)
+  CUSTOMER_PAYMENT  // collect accounts receivable
+  REFUND            // money returned to a customer
+  OTHER_INCOME
+  OWNER_CONTRIBUTION
+  OWNER_DRAW
+  MISC              // manual journal
+}
+
+enum PaymentMethod {
+  CASH
+  BANK
+  CARD
+  ON_ACCOUNT // AR for sales, AP for purchases
+}
+
+enum TxStatus {
+  POSTED
+  VOIDED
+}
+
+model Transaction {
+  id            String          @id @default(cuid())
+  reference     String          @unique // TX-000123
+  type          TransactionType
+  date          DateTime
+  description   String
+  amount        Decimal         @db.Decimal(14, 2)
+  method        PaymentMethod   @default(CASH)
+  /// Income/expense category key (see lib/accounting/chart.ts)
+  category      String?
+  status        TxStatus        @default(POSTED)
+  customerId    String?
+  customer      Customer?       @relation(fields: [customerId], references: [id])
+  supplierId    String?
+  supplier      Supplier?       @relation(fields: [supplierId], references: [id])
+  unitId        String?
+  unit          InventoryUnit?  @relation(fields: [unitId], references: [id])
+  repairId      String?
+  repair        RepairJob?      @relation(fields: [repairId], references: [id])
+  notes         String?
+  entries       JournalEntry[]
+  createdBy     String          @default("system")
+  createdAt     DateTime        @default(now())
+
+  @@index([date])
+  @@index([type])
+}
+
+// ───────────────────────────── Parties ───────────────────────────────────────
+
+model Customer {
+  id           String        @id @default(cuid())
+  name         String
+  phone        String?
+  email        String?
+  notes        String?
+  repairs      RepairJob[]
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+}
+
+model Supplier {
+  id           String        @id @default(cuid())
+  name         String
+  phone        String?
+  email        String?
+  notes        String?
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+}
+
+// ───────────────────────────── Inventory ─────────────────────────────────────
+
+enum ProductLine {
+  SWITCH
+  IPHONE
+  ACCESSORY
+}
+
+enum UnitCondition {
+  NEW
+  LIKE_NEW
+  USED
+  BROKEN
+  REFURBISHED
+}
+
+enum UnitStatus {
+  IN_STOCK      // working, ready for sale
+  BROKEN        // bought broken, awaiting repair
+  IN_REPAIR     // being refurbished
+  READY         // repaired & ready for sale
+  SOLD
+  RETURNED
+  WRITTEN_OFF
+}
+
+/// Serialised units (each console / phone is tracked individually -> specific identification costing)
+model InventoryUnit {
+  id           String        @id @default(cuid())
+  sku          String        @unique
+  productLine  ProductLine
+  model        String        // "Switch OLED", "iPhone 13 Pro 128GB"
+  serial       String?
+  condition    UnitCondition
+  status       UnitStatus
+  purchaseCost Decimal       @db.Decimal(12, 2)
+  /// purchase cost + capitalised refurbishment (parts + labor)
+  costBasis    Decimal       @db.Decimal(12, 2)
+  listPrice    Decimal       @db.Decimal(12, 2)
+  salePrice    Decimal?      @db.Decimal(12, 2)
+  acquiredAt   DateTime
+  soldAt       DateTime?
+  notes        String?
+  transactions Transaction[]
+  refurbParts  PartUsage[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status])
+  @@index([productLine])
+}
+
+/// Bulk parts (screens, joycon rails, batteries…) costed at moving weighted average
+model Part {
+  id           String      @id @default(cuid())
+  sku          String      @unique
+  name         String
+  compatible   String?     // "Switch V2", "iPhone 12/12 Pro"
+  quantity     Int         @default(0)
+  avgCost      Decimal     @default(0) @db.Decimal(12, 2)
+  reorderLevel Int         @default(3)
+  usages       PartUsage[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model PartUsage {
+  id        String         @id @default(cuid())
+  partId    String
+  part      Part           @relation(fields: [partId], references: [id])
+  quantity  Int
+  unitCost  Decimal        @db.Decimal(12, 2)
+  repairId  String?
+  repair    RepairJob?     @relation(fields: [repairId], references: [id])
+  unitId    String?
+  unit      InventoryUnit? @relation(fields: [unitId], references: [id])
+  createdAt DateTime       @default(now())
+}
+
+// ───────────────────────────── Repairs ───────────────────────────────────────
+
+enum RepairStatus {
+  RECEIVED
+  DIAGNOSING
+  WAITING_FOR_PARTS
+  REPAIRING
+  TESTING
+  READY_FOR_PICKUP
+  COMPLETED
+  CANCELLED
+}
+
+enum DeviceType {
+  SWITCH
+  SWITCH_LITE
+  SWITCH_OLED
+  JOYCON
+  IPHONE
+  ANDROID
+  OTHER
+}
+
+model RepairJob {
+  id           String        @id @default(cuid())
+  jobNumber    String        @unique // RJ-1001
+  customerId   String
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  deviceType   DeviceType
+  deviceModel  String?
+  serial       String?
+  problem      String
+  diagnosis    String?
+  status       RepairStatus  @default(RECEIVED)
+  /// quoted / invoiced price to customer
+  price        Decimal       @default(0) @db.Decimal(12, 2)
+  laborCost    Decimal       @default(0) @db.Decimal(12, 2)
+  /// sum of PartUsage.quantity * unitCost (denormalised for reporting)
+  partsCost    Decimal       @default(0) @db.Decimal(12, 2)
+  deposit      Decimal       @default(0) @db.Decimal(12, 2)
+  receivedAt   DateTime      @default(now())
+  dueAt        DateTime?
+  completedAt  DateTime?
+  invoiced     Boolean       @default(false)
+  partsUsed    PartUsage[]
+  history      RepairStatusChange[]
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status])
+}
+
+model RepairStatusChange {
+  id        String       @id @default(cuid())
+  repairId  String
+  repair    RepairJob    @relation(fields: [repairId], references: [id], onDelete: Cascade)
+  from      RepairStatus?
+  to        RepairStatus
+  note      String?
+  changedBy String       @default("system")
+  createdAt DateTime     @default(now())
+}
+
+// ───────────────────────────── Audit trail ───────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  entity    String   // "Transaction", "InventoryUnit", "RepairJob" …
+  entityId  String
+  action    String   // CREATE | UPDATE | VOID | STATUS_CHANGE | DELETE
+  summary   String
+  before    Json?
+  after     Json?
+  actor     String   @default("system")
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+model Counter {
+  key   String @id
+  value Int    @default(0)
+}

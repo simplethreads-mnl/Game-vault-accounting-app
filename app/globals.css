@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 60 14% 98%;
+    --foreground: 0 0% 4%;
+    --card: 60 11% 99%;
+    --card-foreground: 0 0% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 4%;
+    --primary: 247 63% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 60 8% 94%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 60 8% 94%;
+    --muted-foreground: 45 3% 34%;
+    --accent: 247 70% 96%;
+    --accent-foreground: 247 50% 35%;
+    --destructive: 0 62% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 50 9% 87%;
+    --input: 50 9% 87%;
+    --ring: 247 63% 58%;
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 0 0% 9%;
+    --radius: 0.9rem;
+
+    /* chart roles (validated reference palette) */
+    --chart-surface: #fcfcfb;
+    --chart-grid: #e1e0d9;
+    --chart-axis: #898781;
+    --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
+    --series-5: #e87ba4; --series-6: #008300; --series-7: #6250d6; --series-8: #e34948;
+    --delta-good: #006300;
+  }
+  .dark {
+    --background: 0 0% 5%;
+    --foreground: 40 9% 93%;
+    --card: 60 2% 10%;
+    --card-foreground: 40 9% 93%;
+    --popover: 60 2% 10%;
+    --popover-foreground: 40 9% 93%;
+    --primary: 246 70% 72%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 60 2% 15%;
+    --secondary-foreground: 40 9% 93%;
+    --muted: 60 2% 15%;
+    --muted-foreground: 54 9% 74%;
+    --accent: 246 30% 18%;
+    --accent-foreground: 246 80% 85%;
+    --destructive: 0 70% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 60 2% 18%;
+    --input: 60 2% 20%;
+    --ring: 246 70% 72%;
+    --sidebar: 60 2% 8%;
+    --sidebar-foreground: 40 9% 93%;
+
+    --chart-surface: #1a1a19;
+    --chart-grid: #2c2c2a;
+    --chart-axis: #898781;
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+    --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
+    --delta-good: #0ca30c;
+  }
+  * { @apply border-border; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .tabular { font-variant-numeric: tabular-nums; }
+}
+
+@layer components {
+  .page-title { @apply text-2xl font-semibold tracking-tight; }
+  .page-sub { @apply text-sm text-muted-foreground; }
+  .stagger > * { @apply animate-fade-up; }
+  .stagger > *:nth-child(2) { animation-delay: 40ms; }
+  .stagger > *:nth-child(3) { animation-delay: 80ms; }
+  .stagger > *:nth-child(4) { animation-delay: 120ms; }
+  .stagger > *:nth-child(5) { animation-delay: 160ms; }
+  .stagger > *:nth-child(6) { animation-delay: 200ms; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stagger > *, .animate-fade-up { animation: none !important; }
+}
+
+@media print {
+  aside, header, .no-print { display: none !important; }
+  main { padding: 0 !important; }
+}
