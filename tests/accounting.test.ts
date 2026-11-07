@@ -118,3 +118,14 @@ test("repair profit & stats", () => {
   assert.equal(s.mostProfitable?.type, "Screen");
   assert.ok(Math.abs(s.avgMargin - 82 / 160) < 1e-9);
 });
+
+test("date-picker dates stay on the same calendar day in every timezone", async () => {
+  const { businessDate } = await import("../lib/accounting/posting");
+  const d = businessDate.parse("2026-11-07");
+  assert.equal(d.toISOString(), "2026-11-07T12:00:00.000Z");
+  // New York (UTC-5) and Tokyo (UTC+9) both still read Nov 7
+  assert.equal(d.toLocaleDateString("en-CA", { timeZone: "America/New_York" }), "2026-11-07");
+  assert.equal(d.toLocaleDateString("en-CA", { timeZone: "Asia/Tokyo" }), "2026-11-07");
+  // full timestamps pass through untouched
+  assert.equal(businessDate.parse("2026-11-07T18:30:00.000Z").toISOString(), "2026-11-07T18:30:00.000Z");
+});

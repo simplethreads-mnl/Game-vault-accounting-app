@@ -16,9 +16,10 @@ function Row({ label, value, bold, indent, negative }: { label: string; value: n
   );
 }
 
-export default async function ReportsPage({ searchParams }: { searchParams: Promise<{ period?: string; date?: string }> }) {
+export default async function ReportsPage({ searchParams }: { searchParams: Promise<{ period?: string | string[]; date?: string }> }) {
   const sp = await searchParams;
-  const period = (REPORT_PERIODS.includes(sp.period as ReportPeriod) ? sp.period : "monthly") as ReportPeriod;
+  const rawPeriod = Array.isArray(sp.period) ? sp.period[0] : sp.period;
+  const period = (REPORT_PERIODS.includes(rawPeriod as ReportPeriod) ? rawPeriod : "monthly") as ReportPeriod;
   const date = sp.date ?? new Date().toISOString().slice(0, 10);
   const r = await buildReport(period, new Date(`${date}T12:00:00`));
   const href = (format: string) => `/api/reports?period=${period}&date=${date}&format=${format}`;
@@ -39,8 +40,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
           ))}
         </div>
         <input type="date" name="date" defaultValue={date} className="h-9 rounded-lg border bg-card px-2 text-sm" aria-label="Report date" />
-        <input type="hidden" name="period" value={period} />
-        <Button size="sm" variant="secondary">Run</Button>
+        <Button size="sm" variant="secondary" name="period" value={period}>Run</Button>
       </form>
 
       <div className="rounded-2xl border bg-gradient-to-br from-[#6250d6]/10 to-[#2a78d6]/10 p-5">

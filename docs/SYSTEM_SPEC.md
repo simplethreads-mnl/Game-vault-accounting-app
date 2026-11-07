@@ -87,6 +87,7 @@ kept separate from series colours and always appear with an icon or label.
 - **Customer deposits are liabilities** until the job is invoiced.
 - **Accrued technician labor** (2300). Job labor is recognised when the work is done and cleared when you pay the technician, so cash and cost are never double-counted.
 - **Immutable ledger.** Nothing posted is ever edited or deleted. Corrections are reversing entries, recorded with the actor and a reason in the audit log.
+- **Business dates.** A date picked without a time is stored at 12:00 UTC, so it shows on the same calendar day in every timezone from UTC−11 to UTC+11.
 - **Every operation is atomic.** Ledger entry, inventory change and audit record are written together in one database transaction.
 
 ## 4. Dashboard layout
@@ -191,7 +192,7 @@ Prisma 6 → PostgreSQL
 - **Reads.** Server components call `lib/queries.ts` directly, with no API round trip.
 - **Writes.** Client forms POST to `/api/*`, which validates with zod and calls the posting engine. On success, `router.refresh()` re-renders the server data.
 - **Errors.** Validation problems return 400, accounting-rule violations (selling a sold unit, unbalanced entry, insufficient parts) return 422, and missing records return 404.
-- **Auth.** Not included. The audit actor comes from `APP_USER`. To add NextAuth or Clerk, replace `currentUser()` in `lib/db.ts`.
+- **Auth.** Single-owner password login. `middleware.ts` checks an HMAC-signed session cookie (`lib/auth/session.ts`, Web Crypto) on every page and API route except `/login` and `/api/auth/login`. The password is verified with scrypt (`lib/auth/password.ts`), with a 5-attempts-per-15-minutes limit per IP. Cross-site writes are rejected by an Origin check. Sign-ins are written to the audit log. To support several staff accounts later, add a `User` table and put the user id in the session's `sub`.
 
 ### API
 
@@ -207,6 +208,7 @@ Prisma 6 → PostgreSQL
 | GET | `/api/accounts` | Trial balance |
 | GET | `/api/reports?period=&date=&format=json\|csv\|xlsx\|pdf` | Reports and exports |
 | GET | `/api/lookups` | Dropdown data for forms |
+| POST | `/api/auth/login`, `/api/auth/logout` | Start / end the owner session |
 
 ## 8. Improvements specific to Switch repair and resale
 

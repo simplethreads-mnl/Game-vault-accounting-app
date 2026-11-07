@@ -48,8 +48,8 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
 
       <ChartCard title="History">
         <form className="mb-4 grid gap-2 sm:grid-cols-[1fr_200px_150px_150px_auto]" action="/transactions">
-          <input name="q" defaultValue={sp.q} placeholder="Search description, ref, customer, supplier…" className="h-9 rounded-lg border bg-card px-3 text-sm" />
-          <select name="type" defaultValue={sp.type ?? ""} className="h-9 rounded-lg border bg-card px-2 text-sm">
+          <input name="q" aria-label="Search transactions" defaultValue={sp.q} placeholder="Search description, ref, customer, supplier…" className="h-9 rounded-lg border bg-card px-3 text-sm" />
+          <select name="type" aria-label="Transaction type filter" defaultValue={sp.type ?? ""} className="h-9 rounded-lg border bg-card px-2 text-sm">
             <option value="">All types</option>
             {TX_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>

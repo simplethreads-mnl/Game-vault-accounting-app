@@ -15,7 +15,16 @@ type Tx = Prisma.TransactionClient;
 // ───────────────────────────── Input schemas ─────────────────────────────────
 
 const money = z.coerce.number().finite().nonnegative();
-const date = z.coerce.date().default(() => new Date());
+/**
+ * A bare "YYYY-MM-DD" from a date picker is stored at 12:00 UTC so it stays on the
+ * same calendar day in every timezone from UTC-11 to UTC+11 (plain parsing gives
+ * midnight UTC, which shows as the previous day in the Americas).
+ */
+export const businessDate = z.preprocess(
+  (v) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(`${v}T12:00:00Z`) : v),
+  z.coerce.date(),
+);
+const date = businessDate.default(() => new Date());
 const method = z.enum(["CASH", "BANK", "CARD", "ON_ACCOUNT"]).default("CASH");
 const base = { date, description: z.string().trim().max(300).optional(), notes: z.string().max(2000).optional() };
 
@@ -467,8 +476,8 @@ export const repairInput = z.object({
   laborCost: money.default(0),
   deposit: money.default(0),
   depositMethod: z.enum(["CASH", "BANK", "CARD"]).default("CASH"),
-  dueAt: z.coerce.date().optional(),
-  receivedAt: z.coerce.date().optional(),
+  dueAt: businessDate.optional(),
+  receivedAt: businessDate.optional(),
 });
 
 export async function createRepair(db: PrismaClient, raw: z.input<typeof repairInput>, actor = "system") {

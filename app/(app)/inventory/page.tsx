@@ -79,7 +79,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
           action={
             <form className="flex gap-2" action="/inventory">
               <input type="hidden" name="status" value={status} />
-              <input name="q" defaultValue={sp.q} placeholder="Search SKU, model, serial…" className="h-8 w-44 rounded-lg border bg-card px-2.5 text-xs sm:w-56" />
+              <input name="q" aria-label="Search devices" defaultValue={sp.q} placeholder="Search SKU, model, serial…" className="h-8 w-44 rounded-lg border bg-card px-2.5 text-xs sm:w-56" />
             </form>
           }
         >

@@ -8,7 +8,10 @@ import { EXPENSE_OPTIONS, TX_TYPES } from "@/lib/labels";
 import { money } from "@/lib/utils";
 import { useApi, type Lookups } from "./use-api";
 
-const today = () => new Date().toISOString().slice(0, 10);
+/** Local calendar date (not UTC) for the date picker default. */
+const today = () => new Date().toLocaleDateString("en-CA");
+/** Entries dated today keep the current time so they sort above earlier entries. */
+const dateForApi = (d: string) => (d === today() ? new Date().toISOString() : d);
 type State = Record<string, string | boolean>;
 
 export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: { initialType?: string; preset?: State; onDone?: () => void }) {
@@ -39,7 +42,7 @@ export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: {
     e.preventDefault();
     const n = (k: string) => (s[k] === "" || s[k] == null ? undefined : Number(s[k]));
     const str = (k: string) => (s[k] ? String(s[k]) : undefined);
-    const common = { type, date: v("date"), description: str("description"), notes: str("notes") };
+    const common = { type, date: dateForApi(v("date")), description: str("description"), notes: str("notes") };
     let body: Record<string, unknown> = { ...common, amount: n("amount"), method: v("method") };
     switch (type) {
       case "PURCHASE":

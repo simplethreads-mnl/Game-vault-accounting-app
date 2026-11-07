@@ -28,9 +28,24 @@ cp .env.example .env          # edit DATABASE_URL if needed
 npx prisma migrate deploy
 npm run db:seed
 
-# 4. Run
-npm run dev                   # http://localhost:3000
+# 4. Choose your owner password (writes OWNER_PASSWORD_HASH + AUTH_SECRET to .env)
+npm run auth:setup
+
+# 5. Run
+npm run dev                   # http://localhost:3000 → sign in with your password
 ```
+
+## Sign-in
+
+The app is locked behind a single owner password. Every page, API route and export needs a
+valid session; signed-out visitors are sent to `/login`.
+
+- The password is stored only as a salted **scrypt** hash in `.env` (`OWNER_PASSWORD_HASH`).
+- Sessions are **HMAC-signed, HttpOnly, SameSite=Lax** cookies that last 14 days. They're `Secure` (HTTPS-only) in production.
+- After **5 wrong passwords**, sign-in from that IP is blocked for 15 minutes. Successful and failed sign-ins are recorded in the audit trail.
+- Writes from other websites are rejected (Origin check).
+- **Change the password:** run `npm run auth:setup` again and restart. Add `--rotate` to also sign out every device: `npm run auth:setup -- "new password" --rotate`.
+- If you serve the production build over plain HTTP on a private network, set `AUTH_INSECURE_COOKIE="true"`. Otherwise the browser won't keep the session cookie.
 
 **Starting your real books:** run `SEED_DEMO=false npm run db:seed` to load only the chart of
 accounts. Then record an *Owner contribution* for your opening cash, and a *Device purchase*
@@ -42,10 +57,27 @@ for each unit already on the shelf.
 |---|---|
 | `npm run dev` | Development server |
 | `npm run build && npm start` | Production build and server |
-| `npm test` | Unit tests for the accounting formulas and ledger rules |
+| `npm test` | Unit tests: accounting formulas, ledger rules, dates, password hashing, sessions |
+| `npm run test:e2e` | Browser click-through of every page and form (see below) |
+| `npm run auth:setup` | Set or change the owner password |
 | `npm run typecheck` / `npm run lint` | TypeScript / ESLint |
 | `npm run db:migrate` | Create a new migration after editing `prisma/schema.prisma` |
 | `npm run db:seed` | Chart of accounts + demo data |
+
+## Browser click-through test
+
+`tests/e2e/ui-smoke.mjs` drives a real Chromium through 33 checks. It covers sign-in, every page, every
+transaction form, refurbish/sell/refund from inventory, the full repair lifecycle, voiding,
+all report periods and exports, dark mode, the phone menu, sign-out and console errors. It
+also confirms the ledger still balances afterwards.
+
+```bash
+npx playwright install chromium          # first time only
+npm run build && npm start               # in one terminal
+E2E_PASSWORD="your-password" npm run test:e2e
+```
+
+**It posts real "E2E …" transactions, so run it against demo data, never your real books.**
 
 ## Project layout
 

@@ -20,11 +20,12 @@ export const Label = ({ className, ...p }: React.LabelHTMLAttributes<HTMLLabelEl
   <label className={cn("text-xs font-medium text-muted-foreground", className)} {...p} />
 );
 
+/** Wrapping <label> ties the caption to its control for screen readers and getByLabel(). */
 export function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("grid gap-1.5", className)}>
-      <Label>{label}</Label>
+    <label className={cn("grid gap-1.5", className)}>
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
       {children}
-    </div>
+    </label>
   );
 }

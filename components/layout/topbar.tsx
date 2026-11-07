@@ -2,6 +2,7 @@ import { Bell } from "lucide-react";
 import Link from "next/link";
 import { MobileNav } from "./sidebar";
 import { ThemeToggle } from "./theme-toggle";
+import { LogoutButton } from "./logout-button";
 import { QuickAdd } from "@/components/forms/quick-add";
 import { prisma } from "@/lib/db";
 
@@ -24,7 +25,8 @@ export async function Topbar() {
           {alerts > 0 && <span className="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[#d03b3b] px-1 text-[10px] font-semibold text-white">{alerts}</span>}
         </Link>
         <ThemeToggle />
-        <div className="ml-1 grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-[#eb6834] to-[#e87ba4] text-xs font-semibold text-white">GV</div>
+        <LogoutButton />
+        <div className="ml-1 hidden h-8 w-8 sm:grid place-items-center rounded-full bg-gradient-to-br from-[#eb6834] to-[#e87ba4] text-xs font-semibold text-white">GV</div>
       </div>
     </header>
   );
