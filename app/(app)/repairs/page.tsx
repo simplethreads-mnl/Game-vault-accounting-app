@@ -50,7 +50,7 @@ export default async function RepairsPage() {
                 </div>
                 <div className="space-y-2">
                   {items.map((j) => (
-                    <Link key={j.id} href={`/repairs/${j.id}`} className="block rounded-xl border bg-card p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                    <Link prefetch={false} key={j.id} href={`/repairs/${j.id}`} className="block rounded-xl border bg-card p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                       <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                         <span className="font-mono">{j.jobNumber}</span>
                         {j.dueAt && j.dueAt < now && <Badge variant="critical">Overdue</Badge>}
@@ -92,7 +92,7 @@ export default async function RepairsPage() {
               const p = repairProfit(j);
               return (
                 <TR key={j.id}>
-                  <TD><Link className="font-mono text-xs text-primary hover:underline" href={`/repairs/${j.id}`}>{j.jobNumber}</Link></TD>
+                  <TD><Link prefetch={false} className="font-mono text-xs text-primary hover:underline" href={`/repairs/${j.id}`}>{j.jobNumber}</Link></TD>
                   <TD className="font-medium">{j.customer.name}</TD>
                   <TD>{DEVICE_LABEL[j.deviceType]}</TD>
                   <TD className="max-w-[220px] truncate text-muted-foreground">{j.problem}</TD>

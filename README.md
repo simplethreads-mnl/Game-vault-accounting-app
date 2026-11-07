@@ -11,10 +11,13 @@ PostgreSQL**.
 - Daily, weekly, monthly, quarterly and annual reports with **PDF, Excel and CSV** export
 - Audit trail, reversal-based voids, dark mode, responsive down to phone width
 
+**Use it online on your phone, iPad and laptop for free: follow [docs/DEPLOY.md](docs/DEPLOY.md)**
+(Vercel + Neon, about 15 minutes, no coding tools needed). It installs to your home screen like an app.
+
 See **[docs/SYSTEM_SPEC.md](docs/SYSTEM_SPEC.md)** for the full specification: layout, schema,
 posting rules, every formula, architecture and the roadmap.
 
-## Quick start
+## Quick start (on your own computer)
 
 ```bash
 # 1. Postgres (or use any existing instance)
@@ -40,9 +43,12 @@ npm run dev                   # http://localhost:3000 → sign in with your pass
 The app is locked behind a single owner password. Every page, API route and export needs a
 valid session; signed-out visitors are sent to `/login`.
 
-- The password is stored only as a salted **scrypt** hash in `.env` (`OWNER_PASSWORD_HASH`).
+- Set the password either as `OWNER_PASSWORD` (simplest; this is what the online guide uses, and the
+  value stays in your host's encrypted settings) or as a salted **scrypt** hash in `OWNER_PASSWORD_HASH`
+  via `npm run auth:setup`. Session cookies are signed with `AUTH_SECRET`, or, if that isn't set, with a
+  key derived from the secret database URL and the password. Changing the password therefore signs out every device.
 - Sessions are **HMAC-signed, HttpOnly, SameSite=Lax** cookies that last 14 days. They're `Secure` (HTTPS-only) in production.
-- After **5 wrong passwords**, sign-in from that IP is blocked for 15 minutes. Successful and failed sign-ins are recorded in the audit trail.
+- After **5 wrong passwords**, sign-in from that IP is blocked for 15 minutes. Attempts are counted in the database, so the limit holds across serverless instances. Successful and failed sign-ins are recorded in the audit trail.
 - Writes from other websites are rejected (Origin check).
 - **Change the password:** run `npm run auth:setup` again and restart. Add `--rotate` to also sign out every device: `npm run auth:setup -- "new password" --rotate`.
 - If you serve the production build over plain HTTP on a private network, set `AUTH_INSECURE_COOKIE="true"`. Otherwise the browser won't keep the session cookie.
@@ -62,7 +68,8 @@ for each unit already on the shelf.
 | `npm run auth:setup` | Set or change the owner password |
 | `npm run typecheck` / `npm run lint` | TypeScript / ESLint |
 | `npm run db:migrate` | Create a new migration after editing `prisma/schema.prisma` |
-| `npm run db:seed` | Chart of accounts + demo data |
+| `npm run db:seed` | Chart of accounts + demo data (`SEED_DEMO=false` for accounts only) |
+| `npm run vercel-build` | What Vercel runs: migrate, load the chart of accounts, build |
 
 ## Browser click-through test
 

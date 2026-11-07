@@ -194,6 +194,15 @@ Prisma 6 → PostgreSQL
 - **Errors.** Validation problems return 400, accounting-rule violations (selling a sold unit, unbalanced entry, insufficient parts) return 422, and missing records return 404.
 - **Auth.** Single-owner password login. `middleware.ts` checks an HMAC-signed session cookie (`lib/auth/session.ts`, Web Crypto) on every page and API route except `/login` and `/api/auth/login`. The password is verified with scrypt (`lib/auth/password.ts`), with a 5-attempts-per-15-minutes limit per IP. Cross-site writes are rejected by an Origin check. Sign-ins are written to the audit log. To support several staff accounts later, add a `User` table and put the user id in the session's `sub`.
 
+### Hosting
+
+- **Target:** Vercel (serverless functions + Edge middleware) with Neon Postgres. Both have free tiers. Any Node host with Postgres also works (`npm run build && npm start`).
+- **Connections:** `DATABASE_URL` is the pooled connection. Prisma is told about the pooler automatically (`pgbouncer=true`, `connect_timeout=15` for cold starts). Migrations use `DATABASE_URL_UNPOOLED`.
+- **Deploys:** `npm run vercel-build` runs `prisma migrate deploy`, upserts the chart of accounts (idempotent, no demo data), then `next build`.
+- **Transactions:** interactive DB transactions allow 20 s, to absorb network latency to a remote database.
+- **Installable app:** web app manifest (`app/manifest.ts`), generated icons (`app/icon.tsx`, `app/apple-icon.tsx`), standalone display, safe-area padding for notched phones, and 16px form text on phones so iOS doesn't zoom into fields.
+- **Navigation:** there's no route-group `loading.tsx` (it made same-page filter navigations hang in production builds). Sidebar links show a per-link pending spinner instead. In-page filter and record links don't prefetch, which avoids a prefetch race and saves serverless invocations.
+
 ### API
 
 | Method | Route | Purpose |

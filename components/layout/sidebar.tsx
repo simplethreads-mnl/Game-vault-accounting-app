@@ -1,10 +1,16 @@
 "use client";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Gamepad2, Menu, X } from "lucide-react";
+import { Gamepad2, Loader2, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NAV } from "./nav";
+
+/** Spinner shown on the tapped menu item while its page loads (useful when the database is waking up). */
+function PendingIndicator() {
+  const { pending } = useLinkStatus();
+  return pending ? <Loader2 className="ml-auto h-3.5 w-3.5 animate-spin" aria-label="Loading" /> : null;
+}
 
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
   const path = usePathname();
@@ -28,6 +34,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
                   >
                     <Icon className="h-4 w-4" />
                     {label}
+                    <PendingIndicator />
                   </Link>
                 </li>
               );

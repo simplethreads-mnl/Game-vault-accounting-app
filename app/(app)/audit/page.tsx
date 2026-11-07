@@ -17,7 +17,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
       <PageHeader title="Audit trail" description="Immutable log of every change — posted entries are never edited or deleted, only reversed" />
       <div className="flex flex-wrap gap-1.5">
         {["", "Transaction", "RepairJob", "InventoryUnit"].map((e) => (
-          <Link key={e} href={e ? `?entity=${e}` : "/audit"} className={`rounded-full border px-3 py-1 text-xs ${(sp.entity ?? "") === e ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground"}`}>{e || "All"}</Link>
+          <Link prefetch={false} key={e} href={e ? `?entity=${e}` : "/audit"} className={`rounded-full border px-3 py-1 text-xs ${(sp.entity ?? "") === e ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground"}`}>{e || "All"}</Link>
         ))}
       </div>
       <ChartCard title="Events">
@@ -30,14 +30,14 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                 <TD>{l.actor}</TD>
                 <TD><Badge variant={VARIANT[l.action] ?? "secondary"}>{l.action.replace("_", " ")}</Badge></TD>
                 <TD className="text-xs text-muted-foreground">{l.entity}</TD>
-                <TD className="max-w-[520px] truncate">{l.entity === "RepairJob" ? <Link href={`/repairs/${l.entityId}`} className="hover:underline">{l.summary}</Link> : l.summary}</TD>
+                <TD className="max-w-[520px] truncate">{l.entity === "RepairJob" ? <Link prefetch={false} href={`/repairs/${l.entityId}`} className="hover:underline">{l.summary}</Link> : l.summary}</TD>
               </TR>
             ))}
           </TBody>
         </Table>
         <div className="flex justify-end gap-2 pt-4 text-sm">
-          {page > 1 && <Link className="rounded-lg border px-3 py-1.5" href={`?${sp.entity ? `entity=${sp.entity}&` : ""}page=${page - 1}`}>← Newer</Link>}
-          {logs.length === 100 && <Link className="rounded-lg border px-3 py-1.5" href={`?${sp.entity ? `entity=${sp.entity}&` : ""}page=${page + 1}`}>Older →</Link>}
+          {page > 1 && <Link prefetch={false} className="rounded-lg border px-3 py-1.5" href={`?${sp.entity ? `entity=${sp.entity}&` : ""}page=${page - 1}`}>← Newer</Link>}
+          {logs.length === 100 && <Link prefetch={false} className="rounded-lg border px-3 py-1.5" href={`?${sp.entity ? `entity=${sp.entity}&` : ""}page=${page + 1}`}>Older →</Link>}
         </div>
       </ChartCard>
     </div>

@@ -10,7 +10,8 @@ export function KpiCard({
   label: string; value: string; icon?: LucideIcon; delta?: number | null; deltaLabel?: string; invert?: boolean;
   spark?: number[]; sparkColor?: string; hint?: string; className?: string;
 }) {
-  const good = delta == null ? null : invert ? delta < 0 : delta > 0;
+  const flat = delta == null || Math.abs(delta) < 0.0005;
+  const good = flat ? null : invert ? delta! < 0 : delta! > 0;
   const Arrow = delta == null || Math.abs(delta) < 0.0005 ? Minus : delta > 0 ? ArrowUpRight : ArrowDownRight;
   return (
     <Card className={cn("relative overflow-hidden p-5", className)}>

@@ -27,3 +27,26 @@ test("session tokens verify, expire and resist tampering", async () => {
   const expired = await signSession("Owner", SECRET, -10);
   assert.equal(await verifySession(expired, SECRET), null);
 });
+
+test("plain OWNER_PASSWORD works and the derived session key follows it", async () => {
+  const { verifyOwnerPassword } = await import("../lib/auth/password");
+  const { authSecret } = await import("../lib/auth/session");
+  const saved = { ...process.env };
+  try {
+    delete process.env.OWNER_PASSWORD_HASH;
+    delete process.env.AUTH_SECRET;
+    process.env.DATABASE_URL = "postgres://u:p@host/db";
+    process.env.OWNER_PASSWORD = "my shop password";
+    assert.equal(await verifyOwnerPassword("my shop password"), true);
+    assert.equal(await verifyOwnerPassword("my shop passworD"), false);
+    const k1 = await authSecret();
+    assert.ok(k1 && k1.length >= 32);
+    process.env.OWNER_PASSWORD = "changed password";
+    assert.notEqual(await authSecret(), k1); // changing the password signs everyone out
+    delete process.env.OWNER_PASSWORD;
+    assert.equal(await verifyOwnerPassword("anything"), false);
+    assert.equal(await authSecret(), null);
+  } finally {
+    process.env = saved;
+  }
+});

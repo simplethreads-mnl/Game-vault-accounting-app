@@ -2,7 +2,7 @@
   "name": "game-vault-accounting",
   "version": "1.0.0",
   "private": true,
-  "description": "Game Vault — accounting, inventory & repair management for a Nintendo Switch / iPhone resale and repair business",
+  "description": "Game Vault \u2014 accounting, inventory & repair management for a Nintendo Switch / iPhone resale and repair business",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
@@ -17,7 +17,8 @@
     "db:reset": "prisma migrate reset --force",
     "postinstall": "prisma generate",
     "auth:setup": "tsx scripts/setup-auth.ts",
-    "test:e2e": "node tests/e2e/ui-smoke.mjs"
+    "test:e2e": "node tests/e2e/ui-smoke.mjs",
+    "vercel-build": "bash scripts/vercel-build.sh"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

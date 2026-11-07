@@ -1,3 +1,4 @@
+import Form from "next/form";
 import Link from "next/link";
 import type { Prisma, TransactionType } from "@prisma/client";
 import { Badge } from "@/components/ui/badge";
@@ -47,16 +48,16 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       </section>
 
       <ChartCard title="History">
-        <form className="mb-4 grid gap-2 sm:grid-cols-[1fr_200px_150px_150px_auto]" action="/transactions">
-          <input name="q" aria-label="Search transactions" defaultValue={sp.q} placeholder="Search description, ref, customer, supplier…" className="h-9 rounded-lg border bg-card px-3 text-sm" />
-          <select name="type" aria-label="Transaction type filter" defaultValue={sp.type ?? ""} className="h-9 rounded-lg border bg-card px-2 text-sm">
+        <Form prefetch={false} className="mb-4 grid gap-2 sm:grid-cols-[1fr_200px_150px_150px_auto]" action="/transactions">
+          <input name="q" aria-label="Search transactions" defaultValue={sp.q} placeholder="Search description, ref, customer, supplier…" className="h-9 rounded-lg border bg-card px-3 text-base sm:text-sm" />
+          <select name="type" aria-label="Transaction type filter" defaultValue={sp.type ?? ""} className="h-9 rounded-lg border bg-card px-2 text-base sm:text-sm">
             <option value="">All types</option>
             {TX_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
-          <input type="date" name="from" defaultValue={sp.from} className="h-9 rounded-lg border bg-card px-2 text-sm" aria-label="From" />
-          <input type="date" name="to" defaultValue={sp.to} className="h-9 rounded-lg border bg-card px-2 text-sm" aria-label="To" />
+          <input type="date" name="from" defaultValue={sp.from} className="h-9 rounded-lg border bg-card px-2 text-base sm:text-sm" aria-label="From" />
+          <input type="date" name="to" defaultValue={sp.to} className="h-9 rounded-lg border bg-card px-2 text-base sm:text-sm" aria-label="To" />
           <button className="h-9 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground">Filter</button>
-        </form>
+        </Form>
         <Table>
           <THead><TR><TH>Date</TH><TH>Ref</TH><TH>Type</TH><TH>Description</TH><TH>Category</TH><TH>Party</TH><TH>Method</TH><TH className="text-right">Amount</TH><TH /></TR></THead>
           <TBody>
@@ -68,7 +69,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                   <TD className="font-mono text-xs">{t.reference}</TD>
                   <TD><Badge variant={inflow ? "good" : t.type === "REFUND" ? "serious" : "secondary"}>{TX_LABEL[t.type]}</Badge></TD>
                   <TD className="max-w-[280px] truncate">
-                    {t.repair ? <Link href={`/repairs/${t.repair.id}`} className="hover:underline">{t.description}</Link> : t.description}
+                    {t.repair ? <Link prefetch={false} href={`/repairs/${t.repair.id}`} className="hover:underline">{t.description}</Link> : t.description}
                     {t.status === "VOIDED" && <Badge variant="outline" className="ml-2">VOID</Badge>}
                   </TD>
                   <TD className="text-muted-foreground">{t.category ? CATEGORY_LABEL[t.category] ?? t.category : "—"}</TD>
@@ -84,8 +85,8 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
         <div className="flex items-center justify-between pt-4 text-sm">
           <span className="text-muted-foreground">Page {page} of {pages}</span>
           <div className="flex gap-2">
-            {page > 1 && <Link className="rounded-lg border px-3 py-1.5" href={qs({ page: String(page - 1) })}>← Prev</Link>}
-            {page < pages && <Link className="rounded-lg border px-3 py-1.5" href={qs({ page: String(page + 1) })}>Next →</Link>}
+            {page > 1 && <Link prefetch={false} className="rounded-lg border px-3 py-1.5" href={qs({ page: String(page - 1) })}>← Prev</Link>}
+            {page < pages && <Link prefetch={false} className="rounded-lg border px-3 py-1.5" href={qs({ page: String(page + 1) })}>Next →</Link>}
           </div>
         </div>
       </ChartCard>

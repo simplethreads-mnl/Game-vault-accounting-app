@@ -16,7 +16,7 @@ export function AlertsList({ alerts }: { alerts: DashboardData["alerts"] }) {
         const I = Icon[a.level];
         return (
           <li key={i}>
-            <Link href={a.href} className="flex items-start gap-3 py-2.5 hover:opacity-80">
+            <Link prefetch={false} href={a.href} className="flex items-start gap-3 py-2.5 hover:opacity-80">
               <I className={a.level === "critical" ? "mt-0.5 h-4 w-4 shrink-0 text-[#d03b3b]" : a.level === "serious" ? "mt-0.5 h-4 w-4 shrink-0 text-[#ec835a]" : "mt-0.5 h-4 w-4 shrink-0 text-[#c98500]"} aria-hidden />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{a.title}</p>
@@ -38,7 +38,7 @@ export function RepairQueue({ jobs }: { jobs: DashboardData["activeRepairs"] }) 
     <ul className="divide-y">
       {jobs.slice(0, 6).map((j) => (
         <li key={j.id}>
-          <Link href={`/repairs/${j.id}`} className="flex items-center gap-3 py-2.5 hover:opacity-80">
+          <Link prefetch={false} href={`/repairs/${j.id}`} className="flex items-center gap-3 py-2.5 hover:opacity-80">
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium"><span className="text-muted-foreground">{j.jobNumber}</span> · {j.customer.name}</p>
               <p className="truncate text-xs text-muted-foreground">{DEVICE_LABEL[j.deviceType]} — {j.problem}</p>
@@ -61,7 +61,7 @@ export function ProfitSources({ sources }: { sources: DashboardData["profitSourc
       {sources.map((s, i) => (
         <li key={s.key}>
           <div className="mb-1 flex items-center justify-between gap-2 text-sm">
-            <span className="font-medium">{i === 0 && <span className="mr-1.5 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">TOP</span>}{s.key}</span>
+            <span className="font-medium">{i === 0 && s.profit > 0 && <span className="mr-1.5 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">TOP</span>}{s.key}</span>
             <span className="tabular text-right">{money(s.profit, { cents: false })} <span className="text-xs text-muted-foreground">· {pct(s.revenue ? s.profit / s.revenue : 0, 0)}</span></span>
           </div>
           <Meter value={s.profit / max} color="var(--series-7)" />

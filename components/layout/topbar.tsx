@@ -13,7 +13,7 @@ export async function Topbar() {
   ]);
   const alerts = Number(lowParts[0]?.n ?? 0);
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur md:px-8">
+    <header className="app-topbar sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur md:px-8">
       <MobileNav />
       <div className="hidden text-sm text-muted-foreground sm:block">
         <span className="font-medium text-foreground">{activeRepairs}</span> repairs in queue

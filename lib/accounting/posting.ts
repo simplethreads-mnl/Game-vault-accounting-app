@@ -9,6 +9,7 @@ import { ACCOUNT_BY_CATEGORY, EXPENSE_CATEGORIES } from "./chart";
 import { assertBalanced, type DraftLine } from "./ledger";
 import { dec, round2 } from "./money";
 import { weightedAverageCost } from "./metrics";
+import { TX_OPTIONS } from "../db";
 
 type Tx = Prisma.TransactionClient;
 
@@ -408,7 +409,7 @@ export async function postTransaction(db: PrismaClient, raw: TransactionInput, a
     if (sideEffect) await sideEffect();
     await audit(tx, { entity: "Transaction", entityId: record.id, action: "CREATE", summary: `${reference} ${input.type} ${amount.toFixed(2)} – ${description}`, after: record, actor });
     return record;
-  });
+  }, TX_OPTIONS);
 }
 
 /**
@@ -460,7 +461,7 @@ export async function voidTransaction(db: PrismaClient, id: string, reason: stri
     const updated = await tx.transaction.update({ where: { id }, data: { status: "VOIDED", notes: [t.notes, `Voided: ${reason}`].filter(Boolean).join("\n") } });
     await audit(tx, { entity: "Transaction", entityId: id, action: "VOID", summary: `${t.reference} voided – ${reason}`, before: { status: t.status }, after: { status: "VOIDED" }, actor });
     return updated;
-  });
+  }, TX_OPTIONS);
 }
 
 // ───────────────────────────── Repair jobs ───────────────────────────────────
@@ -506,7 +507,7 @@ export async function createRepair(db: PrismaClient, raw: z.input<typeof repairI
     });
     await audit(tx, { entity: "RepairJob", entityId: job.id, action: "CREATE", summary: `${jobNumber} created – ${input.problem}`, after: job, actor });
     return job;
-  });
+  }, TX_OPTIONS);
   if (input.deposit > 0)
     await postTransaction(db, { type: "CUSTOMER_PAYMENT", amount: input.deposit, method: input.depositMethod, repairId: job.id }, actor);
   return job;
@@ -535,7 +536,7 @@ export async function issuePartToRepair(db: PrismaClient, repairId: string, part
       });
     await audit(tx, { entity: "RepairJob", entityId: repairId, action: "UPDATE", summary: `${job.jobNumber}: used ${quantity} × ${part.name} (${cost.toFixed(2)})`, after: usage, actor });
     return usage;
-  });
+  }, TX_OPTIONS);
 }
 
 export const REPAIR_FLOW = ["RECEIVED", "DIAGNOSING", "WAITING_FOR_PARTS", "REPAIRING", "TESTING", "READY_FOR_PICKUP", "COMPLETED"] as const;
@@ -564,7 +565,7 @@ export async function changeRepairStatus(
     });
     await audit(tx, { entity: "RepairJob", entityId: repairId, action: "STATUS_CHANGE", summary: `${job.jobNumber}: ${job.status} → ${to}`, before: { status: job.status, price: job.price, laborCost: job.laborCost }, after: { status: to, price: u.price, laborCost: u.laborCost }, actor });
     return u;
-  });
+  }, TX_OPTIONS);
   // Completing a job automatically invoices it (revenue + cost recognition).
   if (to === "COMPLETED" && !updated.invoiced)
     await postTransaction(db, { type: "REPAIR", repairId, method: opts.method ?? "CASH" }, actor);

@@ -1,11 +1,12 @@
 import { Gamepad2 } from "lucide-react";
 import { LoginForm } from "./login-form";
+import { authSecret, passwordConfigured } from "@/lib/auth/session";
 
 export const metadata = { title: "Sign in" };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;
-  const configured = Boolean(process.env.OWNER_PASSWORD_HASH && (process.env.AUTH_SECRET?.length ?? 0) >= 32);
+  const configured = passwordConfigured() && Boolean(await authSecret());
   // only allow same-site relative redirects
   const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
   return (
@@ -25,7 +26,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         ) : (
           <div className="rounded-lg bg-muted p-3 text-sm">
             <p className="font-medium">Login isn’t set up yet.</p>
-            <p className="mt-1 text-muted-foreground">On the server, run <code className="rounded bg-card px-1">npm run auth:setup</code>, choose a password, then restart the app.</p>
+            <p className="mt-1 text-muted-foreground">In your hosting dashboard (e.g. Vercel → Settings → Environment Variables) add <code className="rounded bg-card px-1">OWNER_PASSWORD</code> with the password you want, then redeploy.</p>
           </div>
         )}
       </div>

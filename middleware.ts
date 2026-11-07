@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, authSecret, verifySession } from "@/lib/auth/session";
 
-const PUBLIC = ["/login", "/api/auth/login"];
+const PUBLIC = ["/login", "/api/auth/login", "/manifest.webmanifest", "/icon", "/apple-icon"];
 
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
@@ -17,7 +17,7 @@ export async function middleware(req: NextRequest) {
 
   if (PUBLIC.includes(pathname)) return NextResponse.next();
 
-  const secret = authSecret();
+  const secret = await authSecret();
   const session = secret ? await verifySession(req.cookies.get(SESSION_COOKIE)?.value, secret) : null;
   if (session) return NextResponse.next();
 
@@ -29,5 +29,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|icon|apple-icon|manifest.webmanifest).*)"],
 };

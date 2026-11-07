@@ -1,3 +1,4 @@
+import Form from "next/form";
 import Link from "next/link";
 import { Boxes, Clock, Gauge, Package, PiggyBank, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -66,8 +67,8 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
       </section>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Link href={qs({ tab: "units" })} className={cn("rounded-lg px-3 py-1.5 text-sm font-medium", tab === "units" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>Devices</Link>
-        <Link href={qs({ tab: "parts" })} className={cn("rounded-lg px-3 py-1.5 text-sm font-medium", tab === "parts" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+        <Link prefetch={false} href={qs({ tab: "units" })} className={cn("rounded-lg px-3 py-1.5 text-sm font-medium", tab === "units" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>Devices</Link>
+        <Link prefetch={false} href={qs({ tab: "parts" })} className={cn("rounded-lg px-3 py-1.5 text-sm font-medium", tab === "parts" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
           Parts {partRows.some((p) => p.low) && <span className="ml-1 rounded-full bg-[#d03b3b] px-1.5 text-[10px] text-white">{partRows.filter((p) => p.low).length}</span>}
         </Link>
       </div>
@@ -77,19 +78,19 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
           title="Devices"
           description={`${list.length} units`}
           action={
-            <form className="flex gap-2" action="/inventory">
+            <Form prefetch={false} className="flex gap-2" action="/inventory">
               <input type="hidden" name="status" value={status} />
-              <input name="q" aria-label="Search devices" defaultValue={sp.q} placeholder="Search SKU, model, serial…" className="h-8 w-44 rounded-lg border bg-card px-2.5 text-xs sm:w-56" />
-            </form>
+              <input name="q" aria-label="Search devices" defaultValue={sp.q} placeholder="Search SKU, model, serial…" className="h-8 w-44 rounded-lg border bg-card px-2.5 text-base sm:w-56 sm:text-xs" />
+            </Form>
           }
         >
           <div className="mb-3 flex flex-wrap gap-1.5">
             {FILTERS.map((f) => (
-              <Link key={f.key} href={qs({ status: f.key })} className={cn("rounded-full border px-2.5 py-1 text-xs", status === f.key ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}>{f.label}</Link>
+              <Link prefetch={false} key={f.key} href={qs({ status: f.key })} className={cn("rounded-full border px-2.5 py-1 text-xs", status === f.key ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}>{f.label}</Link>
             ))}
             <span className="mx-1 w-px bg-border" />
             {[["", "All lines"], ["SWITCH", "Switch"], ["IPHONE", "iPhone"]].map(([k, l]) => (
-              <Link key={l} href={qs({ line: k || undefined })} className={cn("rounded-full border px-2.5 py-1 text-xs", (sp.line ?? "") === k ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}>{l}</Link>
+              <Link prefetch={false} key={l} href={qs({ line: k || undefined })} className={cn("rounded-full border px-2.5 py-1 text-xs", (sp.line ?? "") === k ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}>{l}</Link>
             ))}
           </div>
           <Table>

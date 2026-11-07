@@ -72,7 +72,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
         <h2 className="text-lg font-semibold">Yearly summary · {year}</h2>
         <div className="flex gap-1">
           {[thisYear - 2, thisYear - 1, thisYear].map((yy) => (
-            <Link key={yy} href={`?year=${yy}${sp.range ? `&range=${sp.range}` : ""}`} className={cn("rounded-lg px-3 py-1.5 text-sm", yy === year ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>{yy}</Link>
+            <Link prefetch={false} key={yy} href={`?year=${yy}${sp.range ? `&range=${sp.range}` : ""}`} className={cn("rounded-lg px-3 py-1.5 text-sm", yy === year ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>{yy}</Link>
           ))}
         </div>
       </div>

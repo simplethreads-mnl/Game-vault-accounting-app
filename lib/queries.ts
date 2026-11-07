@@ -142,7 +142,7 @@ export async function dashboard(rangeKey?: string) {
     broken: allUnits.filter((u) => u.status === "BROKEN").length,
     inRepair: allUnits.filter((u) => u.status === "IN_REPAIR").length,
     ready: allUnits.filter((u) => u.status === "READY").length,
-    inStockSwitch: allUnits.filter((u) => u.status === "IN_STOCK" && u.productLine === "SWITCH").length,
+    inStockSwitch: allUnits.filter((u) => ["IN_STOCK", "RETURNED"].includes(u.status) && u.productLine === "SWITCH").length,
     inStockIphone: allUnits.filter((u) => ["IN_STOCK", "READY", "RETURNED"].includes(u.status) && u.productLine === "IPHONE").length,
     soldInPeriod: unitStats.soldCount,
   };
@@ -160,7 +160,7 @@ export async function dashboard(rangeKey?: string) {
     inventory: { ...inv, partsValue: bal(balNow, ["1210"]), wip: bal(balNow, ["1220"]), aging: agingBuckets(allUnits, now), turnover: turn },
     unitStats,
     repairStats: rep,
-    topExpense: topExpense ? { category: topExpense[0], amount: topExpense[1], share: pnl.operatingExpenses ? topExpense[1] / pnl.operatingExpenses : 0 } : null,
+    topExpense: topExpense && topExpense[1] > 0 ? { category: topExpense[0], amount: topExpense[1], share: pnl.operatingExpenses ? topExpense[1] / pnl.operatingExpenses : 0 } : null,
     profitSources,
     activeRepairs,
     alerts,

@@ -19,9 +19,24 @@ function fromB64url(s: string) {
   return Uint8Array.from(bin, (c) => c.charCodeAt(0));
 }
 
-export function authSecret() {
-  const s = process.env.AUTH_SECRET;
-  return s && s.length >= 32 ? s : null;
+/** The owner password is configured either as a hash (npm run auth:setup) or as plain text (hosting dashboards). */
+export function passwordConfigured() {
+  return Boolean(process.env.OWNER_PASSWORD_HASH || process.env.OWNER_PASSWORD);
+}
+
+/**
+ * Key that signs session cookies. Uses AUTH_SECRET when set; otherwise derives one
+ * from the (secret) database URL and the configured password, so a hosted deploy
+ * needs no extra setting — and changing the password signs every device out.
+ */
+export async function authSecret(): Promise<string | null> {
+  const explicit = process.env.AUTH_SECRET;
+  if (explicit && explicit.length >= 32) return explicit;
+  const pw = process.env.OWNER_PASSWORD_HASH || process.env.OWNER_PASSWORD;
+  const db = process.env.DATABASE_URL;
+  if (!pw || !db) return null;
+  const digest = await crypto.subtle.digest("SHA-256", enc.encode(`game-vault-session|${db}|${pw}`));
+  return b64url(new Uint8Array(digest));
 }
 
 async function key(secret: string) {

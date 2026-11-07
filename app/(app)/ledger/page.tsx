@@ -44,7 +44,7 @@ export default async function LedgerPage({ searchParams }: { searchParams: Promi
                   <TR className="hover:bg-transparent"><TD colSpan={4} className="pt-4 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{titleCase(g)}</TD></TR>
                   {accounts.filter((a) => a.type === g).map((a) => (
                     <TR key={a.code} className={cn(sp.account === a.code && "bg-accent")}>
-                      <TD><Link href={`?account=${a.code}`} className="hover:underline"><span className="font-mono text-xs text-muted-foreground">{a.code}</span> {a.name}</Link></TD>
+                      <TD><Link prefetch={false} href={`?account=${a.code}`} className="hover:underline"><span className="font-mono text-xs text-muted-foreground">{a.code}</span> {a.name}</Link></TD>
                       <TD className="text-right text-muted-foreground">{money(a.debit, { cents: false })}</TD>
                       <TD className="text-right text-muted-foreground">{money(a.credit, { cents: false })}</TD>
                       <TD className="text-right font-medium">{money(a.balance)}</TD>
@@ -80,8 +80,8 @@ export default async function LedgerPage({ searchParams }: { searchParams: Promi
             ))}
           </div>
           <div className="flex justify-end gap-2 pt-4 text-sm">
-            {page > 1 && <Link className="rounded-lg border px-3 py-1.5" href={`?${sp.account ? `account=${sp.account}&` : ""}page=${page - 1}`}>← Newer</Link>}
-            {entries.length === 30 && <Link className="rounded-lg border px-3 py-1.5" href={`?${sp.account ? `account=${sp.account}&` : ""}page=${page + 1}`}>Older →</Link>}
+            {page > 1 && <Link prefetch={false} className="rounded-lg border px-3 py-1.5" href={`?${sp.account ? `account=${sp.account}&` : ""}page=${page - 1}`}>← Newer</Link>}
+            {entries.length === 30 && <Link prefetch={false} className="rounded-lg border px-3 py-1.5" href={`?${sp.account ? `account=${sp.account}&` : ""}page=${page + 1}`}>Older →</Link>}
           </div>
         </ChartCard>
       </section>

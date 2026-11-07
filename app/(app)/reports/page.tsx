@@ -1,3 +1,5 @@
+import Form from "next/form";
+import Link from "next/link";
 import { CheckCircle2, FileSpreadsheet, FileText, Sheet, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
@@ -28,20 +30,23 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   return (
     <div className="space-y-6">
       <PageHeader title="Reports" description="Daily, weekly, monthly, quarterly and annual financial statements">
-        <Button asChild variant="outline" size="sm"><a href={href("pdf")}><FileText /> PDF</a></Button>
-        <Button asChild variant="outline" size="sm"><a href={href("xlsx")}><FileSpreadsheet /> Excel</a></Button>
-        <Button asChild variant="outline" size="sm"><a href={href("csv")}><Sheet /> CSV</a></Button>
+        <Button asChild variant="outline" size="sm"><a href={href("pdf")} download><FileText /> PDF</a></Button>
+        <Button asChild variant="outline" size="sm"><a href={href("xlsx")} download><FileSpreadsheet /> Excel</a></Button>
+        <Button asChild variant="outline" size="sm"><a href={href("csv")} download><Sheet /> CSV</a></Button>
       </PageHeader>
 
-      <form className="flex flex-wrap items-end gap-2" action="/reports">
-        <div className="inline-flex rounded-lg border bg-card p-0.5">
+      <div className="flex flex-wrap items-end gap-2">
+        <nav className="inline-flex rounded-lg border bg-card p-0.5" aria-label="Report period">
           {REPORT_PERIODS.map((p) => (
-            <button key={p} name="period" value={p} className={cn("rounded-md px-3 py-1.5 text-xs font-medium capitalize", p === period ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>{p}</button>
+            <Link prefetch={false} key={p} href={`/reports?period=${p}&date=${date}`} aria-current={p === period ? "page" : undefined} className={cn("rounded-md px-3 py-1.5 text-xs font-medium capitalize", p === period ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>{p}</Link>
           ))}
-        </div>
-        <input type="date" name="date" defaultValue={date} className="h-9 rounded-lg border bg-card px-2 text-sm" aria-label="Report date" />
-        <Button size="sm" variant="secondary" name="period" value={period}>Run</Button>
-      </form>
+        </nav>
+        <Form prefetch={false} className="flex items-end gap-2" action="/reports">
+          <input type="hidden" name="period" value={period} />
+          <input type="date" name="date" defaultValue={date} className="h-9 rounded-lg border bg-card px-2 text-base sm:text-sm" aria-label="Report date" />
+          <Button size="sm" variant="secondary">Run</Button>
+        </Form>
+      </div>
 
       <div className="rounded-2xl border bg-gradient-to-br from-[#6250d6]/10 to-[#2a78d6]/10 p-5">
         <p className="text-xs uppercase tracking-wide text-muted-foreground">{period} report</p>

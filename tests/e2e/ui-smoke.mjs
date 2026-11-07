@@ -284,17 +284,24 @@ await step("Report exports download (PDF, Excel, CSV)", async () => {
     const p = await dl.path();
     assert.ok(p, `${name} download failed`);
   }
+  await page.getByLabel("Report date").fill("2026-03-15");
+  await page.getByRole("button", { name: "Run" }).click();
+  await page.getByText("March 2026", { exact: true }).waitFor();
   for (const period of ["daily", "weekly", "quarterly", "annual"]) {
-    await page.getByRole("button", { name: period, exact: true }).click();
-    await page.waitForURL(new RegExp(`period=${period}`));
+    await page.getByRole("link", { name: period, exact: true }).click();
+    await page.waitForURL(new RegExp(`period=${period}`), { waitUntil: "commit" });
+    await page.getByText(new RegExp(`^${period} report$`, "i")).waitFor();
     await page.getByText("Balanced", { exact: true }).waitFor();
   }
 });
 
 await step("Ledger account drill-down filters the journal", async () => {
   await page.goto(BASE + "/ledger");
+  // the page streams in behind a loading skeleton; click only once the real content is up
+  await page.getByRole("heading", { name: "General ledger" }).waitFor();
+  await page.waitForLoadState("networkidle");
   await page.getByRole("link", { name: /1200 Inventory – Devices/ }).click();
-  await page.waitForURL(/account=1200/);
+  await page.waitForURL(/account=1200/, { waitUntil: "commit" }); // in-app navigation, no full page load
   await page.getByRole("heading", { name: /Journal · 1200/ }).waitFor();
 });
 

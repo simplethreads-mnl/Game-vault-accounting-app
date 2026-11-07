@@ -10,7 +10,7 @@ export function QuickAdd({ type = "SALE", label = "New transaction", preset, var
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant={variant}><Plus /> <span className="hidden sm:inline">{label}</span></Button>
+        <Button size="sm" variant={variant} aria-label={label}><Plus /> <span className="hidden sm:inline">{label}</span></Button>
       </DialogTrigger>
       <DialogContent title={label} description="Posts a balanced double-entry journal entry and updates inventory automatically." className="max-w-2xl">
         {open && <TransactionForm initialType={type} preset={preset} onDone={() => setOpen(false)} />}
