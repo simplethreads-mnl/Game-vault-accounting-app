@@ -167,6 +167,29 @@ await step("Unit bought without a price: valued at cost, then priced from its ro
   assert.equal(u.listPrice, 19500);
 });
 
+await step("PC parts: buy and sell a GPU, revenue and COGS land in the PC parts accounts", async () => {
+  const gpu = `${TAG} RTX 3060 12GB`;
+  const before = Object.fromEntries((await api("/api/accounts")).map((a) => [a.code, a.balance]));
+  await openNewTransaction("PURCHASE");
+  await dialog().getByLabel("Product line").selectOption("PC_PARTS");
+  await dialog().getByLabel("Model").fill(gpu);
+  await dialog().getByLabel("Purchase price").fill("9000");
+  await dialog().getByLabel(/Target list price/).fill("12500");
+  await post();
+  const unit = (await api("/api/inventory")).units.find((x) => x.model === gpu);
+  assert.equal(unit.productLine, "PC_PARTS");
+  assert.match(unit.sku, /^PC-/);
+  await page.goto(`${BASE}/inventory?line=PC_PARTS&q=${encodeURIComponent(TAG)}`);
+  await page.getByRole("row", { name: new RegExp(gpu) }).getByRole("button", { name: /sell/i }).click();
+  await post();
+  const after = Object.fromEntries((await api("/api/accounts")).map((a) => [a.code, a.balance]));
+  assert.equal(Math.round((after["4300"] - (before["4300"] ?? 0)) * 100) / 100, 12500, "PC Parts Sales");
+  assert.equal(Math.round((after["5030"] - (before["5030"] ?? 0)) * 100) / 100, 9000, "COGS – PC Parts");
+  await page.goto(BASE + "/");
+  await page.getByText("PC parts in stock").waitFor();
+  await page.getByText("PC parts resale").waitFor();
+});
+
 await step("Amounts are shown in Philippine pesos", async () => {
   await page.goto(BASE + "/");
   const text = await page.getByRole("main").innerText();

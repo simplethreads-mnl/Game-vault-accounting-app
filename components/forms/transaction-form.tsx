@@ -123,6 +123,7 @@ export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: {
             <NativeSelect value={v("productLine") || "SWITCH"} onChange={set("productLine")}>
               <option value="SWITCH">Nintendo Switch</option>
               <option value="IPHONE">iPhone</option>
+              <option value="PC_PARTS">PC parts</option>
               <option value="ACCESSORY">Accessory</option>
             </NativeSelect>
           </Field>
@@ -132,7 +133,7 @@ export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: {
             </NativeSelect>
           </Field>
           <Field label="Model"><Input required value={v("model")} onChange={set("model")} placeholder="Switch OLED / iPhone 13 128GB" list="models" /></Field>
-          <datalist id="models">{["Switch OLED", "Switch V2", "Switch V1", "Switch Lite", "iPhone 12 64GB", "iPhone 13 128GB", "iPhone 14 Pro 256GB", "iPhone 15 128GB"].map((m) => <option key={m} value={m} />)}</datalist>
+          <datalist id="models">{["Switch OLED", "Switch V2", "Switch V1", "Switch Lite", "iPhone 12 64GB", "iPhone 13 128GB", "iPhone 14 Pro 256GB", "iPhone 15 128GB", "RTX 3060 12GB", "RX 6600 8GB", "Ryzen 5 5600", "16GB DDR4 3200 (2×8GB)", "1TB NVMe SSD", "650W PSU 80+ Bronze"].map((m) => <option key={m} value={m} />)}</datalist>
           <Field label="Serial / IMEI"><Input value={v("serial")} onChange={set("serial")} /></Field>
           {amountField("Purchase price")}
           <Field label="Target list price (optional, can set later)"><Input type="number" step="0.01" min="0" value={v("listPrice")} onChange={set("listPrice")} /></Field>
@@ -153,7 +154,7 @@ export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: {
           {!s.unitId && (
             <Field label="Income category">
               <NativeSelect value={v("category") || "ACCESSORY_SALES"} onChange={set("category")}>
-                <option value="ACCESSORY_SALES">Accessories Sales</option><option value="SWITCH_SALES">Nintendo Switch Sales</option><option value="IPHONE_SALES">iPhone Sales</option><option value="OTHER_INCOME">Other Income</option>
+                <option value="ACCESSORY_SALES">Accessories Sales</option><option value="PC_PARTS_SALES">PC Parts Sales</option><option value="SWITCH_SALES">Nintendo Switch Sales</option><option value="IPHONE_SALES">iPhone Sales</option><option value="OTHER_INCOME">Other Income</option>
               </NativeSelect>
             </Field>
           )}

@@ -90,7 +90,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
               <Link prefetch={false} key={f.key} href={qs({ status: f.key })} className={cn("rounded-full border px-2.5 py-1 text-xs", status === f.key ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}>{f.label}</Link>
             ))}
             <span className="mx-1 w-px bg-border" />
-            {[["", "All lines"], ["SWITCH", "Switch"], ["IPHONE", "iPhone"]].map(([k, l]) => (
+            {[["", "All lines"], ["SWITCH", "Switch"], ["IPHONE", "iPhone"], ["PC_PARTS", "PC parts"]].map(([k, l]) => (
               <Link prefetch={false} key={l} href={qs({ line: k || undefined })} className={cn("rounded-full border px-2.5 py-1 text-xs", (sp.line ?? "") === k ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}>{l}</Link>
             ))}
           </div>

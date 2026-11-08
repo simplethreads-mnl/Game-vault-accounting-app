@@ -124,6 +124,7 @@ export async function dashboard(rangeKey?: string) {
     { key: "Switch resale", revenue: pnl.revenueByCategory.SWITCH_SALES, cost: pnl.cogsByCategory.COGS_SWITCH ?? 0 },
     { key: "iPhone resale", revenue: pnl.revenueByCategory.IPHONE_SALES, cost: pnl.cogsByCategory.COGS_IPHONE ?? 0 },
     { key: "Repairs", revenue: pnl.revenueByCategory.SWITCH_REPAIRS + pnl.revenueByCategory.PHONE_REPAIRS, cost: pnl.repairCosts },
+    { key: "PC parts resale", revenue: pnl.revenueByCategory.PC_PARTS_SALES, cost: pnl.cogsByCategory.COGS_PC_PARTS ?? 0 },
     { key: "Accessories", revenue: pnl.revenueByCategory.ACCESSORY_SALES, cost: pnl.cogsByCategory.COGS_ACCESSORY ?? 0 },
     { key: "Other", revenue: pnl.revenueByCategory.OTHER_INCOME, cost: 0 },
   ].map((s) => ({ ...s, profit: round2(s.revenue - s.cost) })).sort((a, b) => b.profit - a.profit);
@@ -145,6 +146,7 @@ export async function dashboard(rangeKey?: string) {
     ready: allUnits.filter((u) => u.status === "READY").length,
     inStockSwitch: allUnits.filter((u) => ["IN_STOCK", "RETURNED"].includes(u.status) && u.productLine === "SWITCH").length,
     inStockIphone: allUnits.filter((u) => ["IN_STOCK", "READY", "RETURNED"].includes(u.status) && u.productLine === "IPHONE").length,
+    inStockPcParts: allUnits.filter((u) => ["IN_STOCK", "READY", "RETURNED"].includes(u.status) && u.productLine === "PC_PARTS").length,
     soldInPeriod: unitStats.soldCount,
   };
 

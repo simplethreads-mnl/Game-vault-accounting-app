@@ -15,6 +15,13 @@ export const TX_TYPES = [
   { value: "MISC", label: "Manual journal entry", group: "Internal" },
 ] as const;
 
+export const PRODUCT_LINE_LABEL: Record<string, string> = {
+  SWITCH: "Nintendo Switch",
+  IPHONE: "iPhone",
+  PC_PARTS: "PC parts",
+  ACCESSORY: "Accessory",
+};
+
 export const TX_LABEL: Record<string, string> = Object.fromEntries(TX_TYPES.map((t) => [t.value, t.label]));
 
 export const MONEY_IN = new Set(["SALE", "CUSTOMER_PAYMENT", "OTHER_INCOME", "OWNER_CONTRIBUTION", "REPAIR"]);

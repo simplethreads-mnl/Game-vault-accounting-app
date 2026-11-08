@@ -164,6 +164,7 @@ enum ProductLine {
   SWITCH
   IPHONE
   ACCESSORY
+  PC_PARTS
 }
 
 enum UnitCondition {

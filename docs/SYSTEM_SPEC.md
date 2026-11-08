@@ -60,7 +60,7 @@ kept separate from series colours and always appear with an icon or label.
 | Type | Debit | Credit | Side effect |
 |---|---|---|---|
 | Device purchase | 1200 Inventory – Devices | Cash / Bank / 2000 AP | Creates a unit (BROKEN or IN_STOCK) |
-| Sale (serialised) | Cash / Bank / 1100 AR<br>50x0 COGS (unit cost basis) | 4000 / 4010 / 4200 Sales<br>1200 Inventory | Unit becomes SOLD and records its sale price |
+| Sale (serialised) | Cash / Bank / 1100 AR<br>50x0 COGS (unit cost basis) | 4000 Switch / 4010 iPhone / 4200 Accessories / 4300 PC parts Sales<br>1200 Inventory | Unit becomes SOLD and records its sale price |
 | Sale (accessory / other) | Cash / Bank / AR | Chosen income account | none |
 | Refurbish own unit | 1200 Inventory (capitalised) | 1210 Parts Inventory, 2300 Accrued Labor | Cost basis increases. Unit becomes READY / REFURBISHED. |
 | Parts purchase | 1210 Parts Inventory | Cash / Bank / AP | Part qty increases. Weighted-average cost is recalculated. |
@@ -148,7 +148,7 @@ Every figure is computed from ledger lines within the selected period.
 | Gross revenue | Σ(credit − debit) on REVENUE accounts (4000–4900) |
 | Refunds | Σ(debit − credit) on 4950 |
 | Net revenue | Gross revenue − Refunds |
-| COGS | Σ(debit − credit) on 5000, 5010, 5020 |
+| COGS | Σ(debit − credit) on 5000, 5010, 5020, 5030 |
 | Repair costs | Σ(debit − credit) on 5100 + 5110 |
 | Gross profit | Net revenue − COGS − Repair costs |
 | Gross margin % | Gross profit ÷ Net revenue |

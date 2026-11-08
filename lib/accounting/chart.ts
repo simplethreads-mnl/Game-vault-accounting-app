@@ -34,12 +34,14 @@ export const CHART_OF_ACCOUNTS: AccountDef[] = [
   { code: "4100", name: "Nintendo Switch Repairs", type: "REVENUE", category: "SWITCH_REPAIRS" },
   { code: "4110", name: "Phone Repairs", type: "REVENUE", category: "PHONE_REPAIRS" },
   { code: "4200", name: "Accessories Sales", type: "REVENUE", category: "ACCESSORY_SALES" },
+  { code: "4300", name: "PC Parts Sales", type: "REVENUE", category: "PC_PARTS_SALES" },
   { code: "4900", name: "Other Income", type: "REVENUE", category: "OTHER_INCOME" },
   { code: "4950", name: "Sales Returns & Refunds", type: "CONTRA_REVENUE", category: "REFUNDS" },
   // Cost of goods sold
   { code: "5000", name: "COGS – Nintendo Switch", type: "COGS", category: "COGS_SWITCH" },
   { code: "5010", name: "COGS – iPhone", type: "COGS", category: "COGS_IPHONE" },
   { code: "5020", name: "COGS – Accessories", type: "COGS", category: "COGS_ACCESSORY" },
+  { code: "5030", name: "COGS – PC Parts", type: "COGS", category: "COGS_PC_PARTS" },
   { code: "5100", name: "Repair Parts Used", type: "COGS", category: "REPAIR_PARTS" },
   { code: "5110", name: "Repair Labor", type: "COGS", category: "REPAIR_LABOR" },
   // Operating expenses
@@ -66,6 +68,7 @@ export const INCOME_CATEGORIES = [
   "SWITCH_REPAIRS",
   "PHONE_REPAIRS",
   "ACCESSORY_SALES",
+  "PC_PARTS_SALES",
   "OTHER_INCOME",
 ] as const;
 

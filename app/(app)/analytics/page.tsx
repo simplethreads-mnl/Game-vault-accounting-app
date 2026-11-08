@@ -8,6 +8,7 @@ import { RangeSelect } from "@/components/range-select";
 import { ClientArea, ClientBars, ClientRanked } from "@/components/charts/simple";
 import { S } from "@/components/charts/theme";
 import { dashboard, yearlySummary } from "@/lib/queries";
+import { PRODUCT_LINE_LABEL } from "@/lib/labels";
 import { cn, money, pct } from "@/lib/utils";
 
 export const metadata = { title: "Analytics" };
@@ -53,7 +54,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           </div>
         </ChartCard>
         <ChartCard title="Profit by product model" description="Sold units in period — profit = sale price − full cost basis">
-          <ClientRanked data={u.models.sort((a, b) => b.profit - a.profit).slice(0, 8).map((m) => ({ key: m.model, label: m.model, value: m.profit, color: S(m.productLine === "IPHONE" ? 7 : 1) }))} />
+          <ClientRanked data={u.models.sort((a, b) => b.profit - a.profit).slice(0, 8).map((m) => ({ key: m.model, label: m.model, value: m.profit, color: S(m.productLine === "IPHONE" ? 7 : m.productLine === "PC_PARTS" ? 5 : 1) }))} />
         </ChartCard>
       </section>
 
@@ -62,7 +63,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           <THead><TR><TH>Model</TH><TH>Line</TH><TH className="text-right">Units sold</TH><TH className="text-right">Revenue</TH><TH className="text-right">Profit</TH><TH className="text-right">Avg profit / unit</TH><TH className="text-right">Margin</TH></TR></THead>
           <TBody>
             {u.models.map((m) => (
-              <TR key={m.model}><TD className="font-medium">{m.model}</TD><TD className="text-muted-foreground">{m.productLine === "SWITCH" ? "Nintendo Switch" : m.productLine === "IPHONE" ? "iPhone" : "Accessory"}</TD><TD className="text-right">{m.sold}</TD><TD className="text-right">{money(m.revenue, { cents: false })}</TD><TD className="text-right">{money(m.profit, { cents: false })}</TD><TD className="text-right">{money(m.avgProfit)}</TD><TD className="text-right">{pct(m.margin)}</TD></TR>
+              <TR key={m.model}><TD className="font-medium">{m.model}</TD><TD className="text-muted-foreground">{PRODUCT_LINE_LABEL[m.productLine] ?? m.productLine}</TD><TD className="text-right">{m.sold}</TD><TD className="text-right">{money(m.revenue, { cents: false })}</TD><TD className="text-right">{money(m.profit, { cents: false })}</TD><TD className="text-right">{money(m.avgProfit)}</TD><TD className="text-right">{pct(m.margin)}</TD></TR>
             ))}
           </TBody>
         </Table>

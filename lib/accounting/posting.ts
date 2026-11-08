@@ -37,7 +37,7 @@ export const transactionInput = z.discriminatedUnion("type", [
     method,
     supplierId: z.string().optional(),
     unit: z.object({
-      productLine: z.enum(["SWITCH", "IPHONE", "ACCESSORY"]),
+      productLine: z.enum(["SWITCH", "IPHONE", "ACCESSORY", "PC_PARTS"]),
       model: z.string().trim().min(1),
       serial: z.string().trim().optional(),
       condition: z.enum(["NEW", "LIKE_NEW", "USED", "BROKEN", "REFURBISHED"]),
@@ -52,7 +52,7 @@ export const transactionInput = z.discriminatedUnion("type", [
     customerId: z.string().optional(),
     unitId: z.string().optional(),
     /** for non-serialised sales (accessories, misc) */
-    category: z.enum(["SWITCH_SALES", "IPHONE_SALES", "ACCESSORY_SALES", "OTHER_INCOME"]).optional(),
+    category: z.enum(["SWITCH_SALES", "IPHONE_SALES", "ACCESSORY_SALES", "PC_PARTS_SALES", "OTHER_INCOME"]).optional(),
   }),
   z.object({
     type: z.literal("REFURBISH"),
@@ -98,9 +98,9 @@ const inAccount = (m: PaymentMethod) => (m === "CASH" ? "1000" : m === "ON_ACCOU
 /** Account money leaves from, or AP when on account. */
 const outAccount = (m: PaymentMethod) => (m === "CASH" ? "1000" : m === "ON_ACCOUNT" ? "2000" : "1010");
 
-const SALES_ACCOUNT: Record<ProductLine, string> = { SWITCH: "4000", IPHONE: "4010", ACCESSORY: "4200" };
-const SALES_CATEGORY: Record<ProductLine, string> = { SWITCH: "SWITCH_SALES", IPHONE: "IPHONE_SALES", ACCESSORY: "ACCESSORY_SALES" };
-const COGS_ACCOUNT: Record<ProductLine, string> = { SWITCH: "5000", IPHONE: "5010", ACCESSORY: "5020" };
+const SALES_ACCOUNT: Record<ProductLine, string> = { SWITCH: "4000", IPHONE: "4010", ACCESSORY: "4200", PC_PARTS: "4300" };
+const SALES_CATEGORY: Record<ProductLine, string> = { SWITCH: "SWITCH_SALES", IPHONE: "IPHONE_SALES", ACCESSORY: "ACCESSORY_SALES", PC_PARTS: "PC_PARTS_SALES" };
+const COGS_ACCOUNT: Record<ProductLine, string> = { SWITCH: "5000", IPHONE: "5010", ACCESSORY: "5020", PC_PARTS: "5030" };
 const isSwitchDevice = (d: string) => d.startsWith("SWITCH") || d === "JOYCON";
 
 export class PostingError extends Error {}

@@ -96,10 +96,11 @@ export function Pipeline({ p }: { p: DashboardData["pipeline"] }) {
     { label: "Repaired · ready", value: p.ready, color: "var(--series-3)" },
     { label: "Switch in stock", value: p.inStockSwitch, color: "var(--series-1)" },
     { label: "iPhones in stock", value: p.inStockIphone, color: "var(--series-7)" },
+    { label: "PC parts in stock", value: p.inStockPcParts, color: "var(--series-5)" },
     { label: "Sold (period)", value: p.soldInPeriod, color: "var(--series-6)" },
   ];
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">
       {steps.map((s) => (
         <div key={s.label} className="rounded-xl border bg-background/50 p-3">
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground"><span className="h-2 w-2 rounded-full" style={{ background: s.color }} />{s.label}</div>
