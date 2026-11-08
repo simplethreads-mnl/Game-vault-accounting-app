@@ -87,7 +87,22 @@ const unit = (o: Partial<Parameters<typeof inventoryValuation>[0][number]>) => (
 
 test("inventory valuation ignores sold units", () => {
   const v = inventoryValuation([unit({}), unit({ status: "BROKEN", costBasis: 40, listPrice: 120 }), unit({ status: "SOLD", salePrice: 160 })]);
-  assert.deepEqual(v, { units: 2, cost: 140, value: 270, profitPotential: 130 });
+  assert.deepEqual(v, { units: 2, cost: 140, value: 270, profitPotential: 130, unpriced: 0 });
+});
+
+test("a unit with no list price is valued at cost, not shown as a loss", () => {
+  const v = inventoryValuation([unit({ costBasis: 4500, listPrice: 0 }), unit({ costBasis: 100, listPrice: 150 })]);
+  assert.deepEqual(v, { units: 2, cost: 4600, value: 4650, profitPotential: 50, unpriced: 1 });
+});
+
+test("money is shown in Philippine pesos", async () => {
+  const { money } = await import("../lib/utils");
+  const { compactMoney } = await import("../components/charts/theme");
+  assert.equal(money(4500), "₱4,500.00");
+  assert.equal(money(-1250.5), "-₱1,250.50");
+  assert.equal(compactMoney(4500), "₱4.5k");
+  assert.equal(compactMoney(-25000), "-₱25k");
+  assert.equal(compactMoney(1_250_000), "₱1.3M");
 });
 
 test("aging buckets by days held", () => {

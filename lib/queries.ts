@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "./db";
+import { money } from "./utils";
 import { CHART_OF_ACCOUNTS, isDebitNormal } from "./accounting/chart";
 import { dec, round2 } from "./accounting/money";
 import {
@@ -134,7 +135,7 @@ export async function dashboard(rangeKey?: string) {
 
   const alerts = [
     ...allParts.filter((p) => p.low).map((p) => ({ level: p.quantity === 0 ? "critical" : "warning", title: `${p.name}: ${p.quantity} left`, detail: `Reorder level ${p.reorderLevel}`, href: "/inventory?tab=parts" })),
-    ...agedUnits.map((u) => ({ level: "serious", title: `${u.model} unsold ${Math.floor((now.getTime() - u.acquiredAt.getTime()) / 86_400_000)} days`, detail: `${u.sku} · cost $${u.costBasis.toFixed(0)} — consider a price drop`, href: "/inventory" })),
+    ...agedUnits.map((u) => ({ level: "serious", title: `${u.model} unsold ${Math.floor((now.getTime() - u.acquiredAt.getTime()) / 86_400_000)} days`, detail: `${u.sku} · cost ${money(u.costBasis, { cents: false })} — consider a price drop`, href: "/inventory" })),
     ...overdue.map((r) => ({ level: "warning", title: `${r.jobNumber} overdue`, detail: `${r.customer.name} · ${r.problem}`, href: `/repairs/${r.id}` })),
   ] as { level: "critical" | "serious" | "warning"; title: string; detail: string; href: string }[];
 

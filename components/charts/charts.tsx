@@ -86,7 +86,8 @@ export function CashFlow({ data, height = H }: { data: Row[]; height?: number })
 export type Slice = { key: string; label: string; value: number; color: string };
 
 /** Donut with a hero number in the middle and a value legend underneath. */
-export function Donut({ data, centerLabel, centerValue, height = 210 }: { data: Slice[]; centerLabel: string; centerValue: string; height?: number }) {
+export function Donut({ data, centerLabel, centerValue, height = 210, kind = "money" }: { data: Slice[]; centerLabel: string; centerValue: string; height?: number; kind?: "money" | "count" }) {
+  const fmtValue = (v: number) => (kind === "count" ? v.toLocaleString() : money(v, { cents: false }));
   const total = data.reduce((a, d) => a + Math.max(0, d.value), 0);
   const visible = data.filter((d) => d.value > 0);
   return (
@@ -94,7 +95,7 @@ export function Donut({ data, centerLabel, centerValue, height = 210 }: { data: 
       <div className="relative" style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Tooltip content={<ChartTooltip format={(v) => `${money(v)} · ${pct(total ? v / total : 0)}`} />} />
+            <Tooltip content={<ChartTooltip format={(v) => `${kind === "count" ? v.toLocaleString() : money(v)} · ${pct(total ? v / total : 0)}`} />} />
             <Pie data={visible} dataKey="value" nameKey="label" innerRadius="64%" outerRadius="92%" paddingAngle={visible.length > 1 ? 1.5 : 0} cornerRadius={4} stroke={SURFACE} strokeWidth={2} animationDuration={900}>
               {visible.map((d) => <Cell key={d.key} fill={d.color} />)}
             </Pie>
@@ -115,7 +116,7 @@ export function Donut({ data, centerLabel, centerValue, height = 210 }: { data: 
               <span className="truncate">{d.label}</span>
             </span>
             <span className="tabular shrink-0 font-medium">
-              {money(d.value, { cents: false })} <span className="text-muted-foreground">· {pct(total ? Math.max(0, d.value) / total : 0, 0)}</span>
+              {fmtValue(d.value)} <span className="text-muted-foreground">· {pct(total ? Math.max(0, d.value) / total : 0, 0)}</span>
             </span>
           </li>
         ))}

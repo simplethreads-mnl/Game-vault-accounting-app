@@ -204,8 +204,10 @@ export const UNSOLD = ["IN_STOCK", "BROKEN", "IN_REPAIR", "READY", "RETURNED"];
 export function inventoryValuation(units: UnitLike[]) {
   const unsold = units.filter((u) => UNSOLD.includes(u.status));
   const cost = unsold.reduce((a, u) => a + u.costBasis, 0);
-  const value = unsold.reduce((a, u) => a + u.listPrice, 0);
-  return { units: unsold.length, cost: round2(cost), value: round2(value), profitPotential: round2(value - cost) };
+  // Units without a list price yet are valued at cost, so they don't show as a loss.
+  const value = unsold.reduce((a, u) => a + (u.listPrice > 0 ? u.listPrice : u.costBasis), 0);
+  const unpriced = unsold.filter((u) => !(u.listPrice > 0)).length;
+  return { units: unsold.length, cost: round2(cost), value: round2(value), profitPotential: round2(value - cost), unpriced };
 }
 
 export function agingBuckets(units: UnitLike[], asOf = new Date()) {

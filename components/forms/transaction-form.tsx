@@ -135,7 +135,7 @@ export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: {
           <datalist id="models">{["Switch OLED", "Switch V2", "Switch V1", "Switch Lite", "iPhone 12 64GB", "iPhone 13 128GB", "iPhone 14 Pro 256GB", "iPhone 15 128GB"].map((m) => <option key={m} value={m} />)}</datalist>
           <Field label="Serial / IMEI"><Input value={v("serial")} onChange={set("serial")} /></Field>
           {amountField("Purchase price")}
-          <Field label="Target list price"><Input type="number" step="0.01" min="0" value={v("listPrice")} onChange={set("listPrice")} /></Field>
+          <Field label="Target list price (optional, can set later)"><Input type="number" step="0.01" min="0" value={v("listPrice")} onChange={set("listPrice")} /></Field>
           {methodSelect()}
           <Field label="Bought from"><Input value={v("supplierName")} onChange={set("supplierName")} list="suppliers" placeholder="Seller / supplier" /></Field>
           {nameList("suppliers", lookups?.suppliers)}

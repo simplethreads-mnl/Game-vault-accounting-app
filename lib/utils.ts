@@ -5,11 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const CURRENCY = process.env.NEXT_PUBLIC_CURRENCY ?? "USD";
+import { CURRENCY, LOCALE } from "./currency";
 
 export function money(n: number, opts: { compact?: boolean; cents?: boolean } = {}) {
   const { compact = false, cents = true } = opts;
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(LOCALE, {
     style: "currency",
     currency: CURRENCY,
     notation: compact ? "compact" : "standard",

@@ -149,6 +149,31 @@ await step("Device purchase (broken) creates a unit", async () => {
   assert.equal(u.status, "BROKEN");
 });
 
+await step("Unit bought without a price: valued at cost, then priced from its row", async () => {
+  const unpriced = `${TAG} iPhone 13 unpriced`;
+  await openNewTransaction("PURCHASE");
+  await dialog().getByLabel("Product line").selectOption("IPHONE");
+  await dialog().getByLabel("Model").fill(unpriced);
+  await dialog().getByLabel("Purchase price").fill("15000");
+  await post();
+  await page.goto(`${BASE}/inventory?q=${encodeURIComponent(unpriced)}`);
+  await page.getByText(/without a price · counted at cost/).waitFor();
+  await page.getByRole("row", { name: new RegExp(unpriced) }).getByRole("button", { name: /set price/i }).click();
+  await dialog().getByLabel("List price").fill("19500");
+  await dialog().getByText(/Expected profit/).waitFor();
+  await dialog().getByRole("button", { name: "Save price" }).click();
+  await expectToast("Price updated");
+  const u = (await api("/api/inventory")).units.find((x) => x.model === unpriced);
+  assert.equal(u.listPrice, 19500);
+});
+
+await step("Amounts are shown in Philippine pesos", async () => {
+  await page.goto(BASE + "/");
+  const text = await page.getByRole("main").innerText();
+  assert.match(text, /₱/, "no ₱ on the dashboard");
+  assert.doesNotMatch(text, /\$\d/, "a dollar amount is still shown");
+});
+
 await step("Parts purchase of a brand-new part", async () => {
   await page.goto(BASE + "/inventory?tab=parts");
   await page.getByRole("main").getByRole("button", { name: /buy parts/i }).click();

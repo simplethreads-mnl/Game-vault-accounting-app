@@ -8,6 +8,7 @@ import { ChartCard, PageHeader } from "@/components/section";
 import { ClientBars, ClientDonut } from "@/components/charts/simple";
 import { S } from "@/components/charts/theme";
 import { QuickAdd } from "@/components/forms/quick-add";
+import { PriceButton } from "@/components/forms/price-button";
 import { dashboard, parts, units } from "@/lib/queries";
 import { UNIT_STATUS_LABEL, UNIT_STATUS_VARIANT } from "@/lib/labels";
 import { cn, money, num, shortDate } from "@/lib/utils";
@@ -51,7 +52,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
       <section className="stagger grid grid-cols-2 gap-4 xl:grid-cols-6">
         <KpiCard label="Unsold units" value={num(d.inventory.units)} icon={Package} hint="all statuses except sold" />
         <KpiCard label="Inventory cost" value={money(d.inventory.cost, { cents: false })} icon={Boxes} hint="at cost basis" />
-        <KpiCard label="Inventory value" value={money(d.inventory.value, { cents: false })} icon={Tag} hint="at list price" />
+        <KpiCard label="Inventory value" value={money(d.inventory.value, { cents: false })} icon={Tag} hint={d.inventory.unpriced ? `${d.inventory.unpriced} without a price · counted at cost` : "at list price"} />
         <KpiCard label="Profit potential" value={money(d.inventory.profitPotential, { cents: false })} icon={PiggyBank} hint="value − cost" />
         <KpiCard label="Turnover (12m)" value={`${d.inventory.turnover.rate.toFixed(1)}×`} icon={Gauge} hint={`${Math.round(d.inventory.turnover.daysInInventory)} days avg. in stock`} />
         <KpiCard label="Units sold (12m)" value={num(d.unitStats.soldCount)} icon={Clock} hint={`avg ${money(d.unitStats.avgProfitPerConsole, { cents: false })} / console`} />
@@ -62,7 +63,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
           <ClientBars data={d.inventory.aging.map((a) => ({ label: `${a.label} (${a.units})`, cost: a.cost }))} series={[{ key: "cost", label: "Cost tied up", color: S(1) }]} height={220} />
         </ChartCard>
         <ChartCard title="Units by stage" description="Repair-and-resale pipeline">
-          <ClientDonut data={byStatus} centerLabel="Unsold" centerValue={String(d.inventory.units)} />
+          <ClientDonut kind="count" data={byStatus} centerLabel="Unsold" centerValue={String(d.inventory.units)} />
         </ChartCard>
       </section>
 
@@ -112,8 +113,11 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
                     <TD className={cn("text-right font-medium", price - u.costBasis < 0 && "text-[#d03b3b]")}>{money(price - u.costBasis)}{!u.salePrice && <span className="text-[10px] text-muted-foreground"> est.</span>}</TD>
                     <TD className={cn("text-right", !u.soldAt && age > 60 && "font-medium text-[#ec835a]")}>{age}d</TD>
                     <TD className="text-right">
-                      {["IN_STOCK", "READY", "RETURNED"].includes(u.status) && <QuickAdd type="SALE" label="Sell" variant="secondary" preset={{ unitId: u.id, amount: String(u.listPrice) }} />}
-                      {["BROKEN", "IN_REPAIR"].includes(u.status) && <QuickAdd type="REFURBISH" label="Refurbish" variant="secondary" preset={{ unitId: u.id }} />}
+                      <div className="flex justify-end gap-1.5">
+                        {!["SOLD", "WRITTEN_OFF"].includes(u.status) && <PriceButton id={u.id} sku={u.sku} model={u.model} listPrice={u.listPrice} costBasis={u.costBasis} />}
+                        {["IN_STOCK", "READY", "RETURNED"].includes(u.status) && <QuickAdd type="SALE" label="Sell" variant="secondary" preset={{ unitId: u.id, ...(u.listPrice > 0 ? { amount: String(u.listPrice) } : {}) }} />}
+                        {["BROKEN", "IN_REPAIR"].includes(u.status) && <QuickAdd type="REFURBISH" label="Refurbish" variant="secondary" preset={{ unitId: u.id }} />}
+                      </div>
                     </TD>
                   </TR>
                 );

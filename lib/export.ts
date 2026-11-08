@@ -4,7 +4,11 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Report } from "./reports";
 
-const fmt = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: process.env.NEXT_PUBLIC_CURRENCY ?? "USD" });
+import { CURRENCY, CURRENCY_SYMBOL, LOCALE } from "./currency";
+
+// The PDF's built-in fonts have no ₱ glyph, so PDFs print the ISO code ("PHP 4,500.00").
+const fmt = (n: number) =>
+  n.toLocaleString(LOCALE, { style: "currency", currency: CURRENCY, currencyDisplay: "code" }).replace(/\u00a0/g, " ");
 const d = (x: Date) => x.toISOString().slice(0, 10);
 
 function pnlRows(r: Report): [string, number][] {
@@ -62,7 +66,7 @@ export async function toExcel(r: Report) {
   const wb = new ExcelJS.Workbook();
   wb.creator = "Game Vault";
   wb.created = new Date();
-  const money = '"$"#,##0.00;[Red]-"$"#,##0.00';
+  const money = `"${CURRENCY_SYMBOL}"#,##0.00;[Red]-"${CURRENCY_SYMBOL}"#,##0.00`;
   const bold = { bold: true };
 
   const ws = wb.addWorksheet("P&L");
