@@ -41,7 +41,10 @@ export const transactionInput = z.discriminatedUnion("type", [
       model: z.string().trim().min(1),
       serial: z.string().trim().optional(),
       condition: z.enum(["NEW", "LIKE_NEW", "USED", "BROKEN", "REFURBISHED"]),
+      /** asking price per unit */
       listPrice: money,
+      /** how many identical units this purchase covers; the total amount is split evenly */
+      quantity: z.coerce.number().int().min(1).max(100).default(1),
     }),
   }),
   z.object({
@@ -174,29 +177,42 @@ export async function postTransaction(db: PrismaClient, raw: TransactionInput, a
     let description = input.description ?? "";
     const link: { unitId?: string; repairId?: string; customerId?: string; supplierId?: string; category?: string; method?: PaymentMethod } = {};
     let sideEffect: (() => Promise<unknown>) | null = null;
+    const createdUnitIds: string[] = [];
 
     switch (input.type) {
       case "PURCHASE": {
-        const sku = await nextSku(tx, input.unit.productLine);
         const broken = input.unit.condition === "BROKEN";
-        const unit = await tx.inventoryUnit.create({
-          data: {
-            sku,
-            productLine: input.unit.productLine,
-            model: input.unit.model,
-            serial: input.unit.serial,
-            condition: input.unit.condition,
-            status: broken ? "BROKEN" : "IN_STOCK",
-            purchaseCost: input.amount,
-            costBasis: input.amount,
-            listPrice: input.unit.listPrice,
-            acquiredAt: input.date,
-          },
-        });
+        const qty = input.unit.quantity;
+        // Split the total cost across units to the cent; any leftover cent goes on the first unit.
+        const totalCents = Math.round(input.amount * 100);
+        const each = Math.floor(totalCents / qty);
+        const costs = Array.from({ length: qty }, (_, i) => (each + (i === 0 ? totalCents - each * qty : 0)) / 100);
+        const skus: string[] = [];
+        for (let i = 0; i < qty; i++) {
+          const sku = await nextSku(tx, input.unit.productLine);
+          const unit = await tx.inventoryUnit.create({
+            data: {
+              sku,
+              productLine: input.unit.productLine,
+              model: input.unit.model,
+              serial: qty === 1 ? input.unit.serial : undefined,
+              condition: input.unit.condition,
+              status: broken ? "BROKEN" : "IN_STOCK",
+              purchaseCost: costs[i],
+              costBasis: costs[i],
+              listPrice: input.unit.listPrice,
+              acquiredAt: input.date,
+            },
+          });
+          skus.push(sku);
+          createdUnitIds.push(unit.id);
+          lines.push({ code: "1200", debit: costs[i], unitId: unit.id });
+        }
         amount = input.amount;
-        description ||= `Bought ${broken ? "broken " : ""}${unit.model} (${sku})`;
-        lines.push({ code: "1200", debit: amount, unitId: unit.id }, { code: outAccount(input.method), credit: amount });
-        Object.assign(link, { unitId: unit.id, supplierId: input.supplierId, method: input.method });
+        lines.push({ code: outAccount(input.method), credit: amount });
+        const what = `${qty > 1 ? `${qty} × ` : ""}${broken ? "broken " : ""}${input.unit.model} (${skus.length > 1 ? `${skus[0]}…${skus[skus.length - 1]}` : skus[0]})`;
+        description ||= amount === 0 ? `Received free: ${what}` : `Bought ${what}`;
+        Object.assign(link, { unitId: createdUnitIds[0], supplierId: input.supplierId, method: input.method });
         break;
       }
 
@@ -388,6 +404,8 @@ export async function postTransaction(db: PrismaClient, raw: TransactionInput, a
         break;
     }
 
+    const moved = lines.some((l) => (l.debit ?? 0) > 0 || (l.credit ?? 0) > 0);
+    if (!moved && input.type !== "PURCHASE") throw new PostingError("Enter an amount greater than zero");
     const record = await tx.transaction.create({
       data: {
         reference,
@@ -405,7 +423,9 @@ export async function postTransaction(db: PrismaClient, raw: TransactionInput, a
         createdBy: actor,
       },
     });
-    await writeEntry(tx, { date: input.date, memo: `${reference} · ${description}`, lines, transactionId: record.id, actor });
+    if (moved) await writeEntry(tx, { date: input.date, memo: `${reference} · ${description}`, lines, transactionId: record.id, actor });
+    // A ₱0 purchase (free stock) moves no money, so there is no journal entry — the units still go into inventory at zero cost.
+    if (createdUnitIds.length) await tx.inventoryUnit.updateMany({ where: { id: { in: createdUnitIds } }, data: { purchaseTransactionId: record.id } });
     if (sideEffect) await sideEffect();
     await audit(tx, { entity: "Transaction", entityId: record.id, action: "CREATE", summary: `${reference} ${input.type} ${amount.toFixed(2)} – ${description}`, after: record, actor });
     return record;
@@ -443,8 +463,10 @@ export async function voidTransaction(db: PrismaClient, id: string, reason: stri
         if (t.type === "SALE" && unit.status === "SOLD")
           await tx.inventoryUnit.update({ where: { id: unit.id }, data: { status: unit.condition === "REFURBISHED" ? "READY" : "IN_STOCK", salePrice: null, soldAt: null } });
         if (t.type === "PURCHASE") {
-          if (unit.status === "SOLD") throw new PostingError(`Void the sale of ${unit.sku} first`);
-          await tx.inventoryUnit.update({ where: { id: unit.id }, data: { status: "WRITTEN_OFF", notes: `Purchase ${t.reference} voided` } });
+          const created = await tx.inventoryUnit.findMany({ where: { OR: [{ purchaseTransactionId: t.id }, { id: unit.id }] } });
+          const sold = created.find((u) => u.status === "SOLD");
+          if (sold) throw new PostingError(`Void the sale of ${sold.sku} first`);
+          await tx.inventoryUnit.updateMany({ where: { id: { in: created.map((u) => u.id) } }, data: { status: "WRITTEN_OFF", notes: `Purchase ${t.reference} voided` } });
         }
         if (t.type === "REFURBISH") {
           await tx.inventoryUnit.update({ where: { id: unit.id }, data: { costBasis: { decrement: dec(t.amount) } } });

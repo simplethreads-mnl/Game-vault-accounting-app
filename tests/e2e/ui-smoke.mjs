@@ -190,6 +190,36 @@ await step("PC parts: buy and sell a GPU, revenue and COGS land in the PC parts 
   await page.getByText("PC parts resale").waitFor();
 });
 
+await step("Free stock: 3 RAM kits at ₱0 become 3 items; selling one is all profit", async () => {
+  const ram = `${TAG} 16GB DDR4 free`;
+  await openNewTransaction("PURCHASE");
+  await dialog().getByLabel("Product line").selectOption("PC_PARTS");
+  await dialog().getByLabel("Model").fill(ram);
+  await dialog().getByLabel("Quantity").fill("3");
+  await dialog().getByLabel(/Total purchase price/).fill("0");
+  await dialog().getByText(/3 separate items will be added/).waitFor();
+  await dialog().getByLabel(/Target list price/).fill("1800");
+  await post();
+  const items = (await api("/api/inventory")).units.filter((x) => x.model === ram);
+  assert.equal(items.length, 3, "three units created");
+  assert.ok(items.every((u) => u.costBasis === 0 && u.status === "IN_STOCK"), "all at ₱0 cost, in stock");
+  const before = Object.fromEntries((await api("/api/accounts")).map((a) => [a.code, a.balance]));
+  await page.goto(`${BASE}/inventory?line=PC_PARTS&q=${encodeURIComponent(ram)}`);
+  await page.getByRole("row", { name: new RegExp(ram) }).first().getByRole("button", { name: /sell/i }).click();
+  await post();
+  const after = Object.fromEntries((await api("/api/accounts")).map((a) => [a.code, a.balance]));
+  assert.equal(Math.round((after["4300"] - before["4300"]) * 100) / 100, 1800, "sale revenue");
+  assert.equal(Math.round((after["5030"] - before["5030"]) * 100) / 100, 0, "no cost of goods for a free item");
+  await page.goto(`${BASE}/transactions?q=${encodeURIComponent("Received free")}`);
+  await page.getByRole("cell", { name: new RegExp(`Received free: 3 × ${ram}`) }).waitFor();
+});
+
+await step("A ₱0 expense is still refused with a clear message", async () => {
+  const r = await page.request.post(BASE + "/api/transactions", { data: { type: "EXPENSE", category: "FOOD", amount: 0 } });
+  assert.equal(r.status(), 422);
+  assert.match((await r.json()).error, /greater than zero/);
+});
+
 await step("Amounts are shown in Philippine pesos", async () => {
   await page.goto(BASE + "/");
   const text = await page.getByRole("main").innerText();

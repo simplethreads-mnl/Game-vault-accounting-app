@@ -46,7 +46,7 @@ export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: {
     let body: Record<string, unknown> = { ...common, amount: n("amount"), method: v("method") };
     switch (type) {
       case "PURCHASE":
-        body = { ...body, supplierName: str("supplierName"), unit: { productLine: v("productLine") || "SWITCH", model: v("model"), serial: str("serial"), condition: v("condition") || "USED", listPrice: n("listPrice") ?? 0 } };
+        body = { ...body, supplierName: str("supplierName"), unit: { productLine: v("productLine") || "SWITCH", model: v("model"), serial: str("serial"), condition: v("condition") || "USED", listPrice: n("listPrice") ?? 0, quantity: n("quantity") ?? 1 } };
         break;
       case "SALE":
         body = { ...body, unitId: str("unitId"), category: s.unitId ? undefined : v("category") || "ACCESSORY_SALES", customerName: str("customerName") };
@@ -135,8 +135,14 @@ export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: {
           <Field label="Model"><Input required value={v("model")} onChange={set("model")} placeholder="Switch OLED / iPhone 13 128GB" list="models" /></Field>
           <datalist id="models">{["Switch OLED", "Switch V2", "Switch V1", "Switch Lite", "iPhone 12 64GB", "iPhone 13 128GB", "iPhone 14 Pro 256GB", "iPhone 15 128GB", "RTX 3060 12GB", "RX 6600 8GB", "Ryzen 5 5600", "16GB DDR4 3200 (2×8GB)", "1TB NVMe SSD", "650W PSU 80+ Bronze"].map((m) => <option key={m} value={m} />)}</datalist>
           <Field label="Serial / IMEI"><Input value={v("serial")} onChange={set("serial")} /></Field>
-          {amountField("Purchase price")}
-          <Field label="Target list price (optional, can set later)"><Input type="number" step="0.01" min="0" value={v("listPrice")} onChange={set("listPrice")} /></Field>
+          <Field label="Quantity"><Input type="number" inputMode="numeric" min="1" max="100" step="1" value={v("quantity") || "1"} onChange={set("quantity")} /></Field>
+          {amountField(Number(v("quantity") || 1) > 1 ? "Total purchase price (0 if free)" : "Purchase price (0 if free)")}
+          {Number(v("quantity") || 1) > 1 && s.amount !== undefined && v("amount") !== "" && (
+            <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground sm:col-span-2">
+              {v("quantity")} separate items will be added, each costing <b className="text-foreground">{money(Number(v("amount")) / Number(v("quantity")))}</b>.
+            </p>
+          )}
+          <Field label="Target list price per item (optional)"><Input type="number" step="0.01" min="0" value={v("listPrice")} onChange={set("listPrice")} /></Field>
           {methodSelect()}
           <Field label="Bought from"><Input value={v("supplierName")} onChange={set("supplierName")} list="suppliers" placeholder="Seller / supplier" /></Field>
           {nameList("suppliers", lookups?.suppliers)}
