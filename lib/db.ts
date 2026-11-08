@@ -16,8 +16,10 @@ export function databaseUrl(raw = process.env.DATABASE_URL) {
   }
 }
 
+// Accept the names other database integrations use (e.g. a Neon prefix left as "STORAGE").
+process.env.DATABASE_URL ||= process.env.STORAGE_URL || process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL;
 // The schema's directUrl (used only by migrations) must resolve; default it to the main URL.
-process.env.DATABASE_URL_UNPOOLED ??= process.env.DATABASE_URL;
+process.env.DATABASE_URL_UNPOOLED ||= process.env.STORAGE_URL_UNPOOLED || process.env.POSTGRES_URL_NON_POOLING || process.env.DATABASE_URL;
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 

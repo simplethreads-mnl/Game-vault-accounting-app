@@ -33,7 +33,7 @@ export async function authSecret(): Promise<string | null> {
   const explicit = process.env.AUTH_SECRET;
   if (explicit && explicit.length >= 32) return explicit;
   const pw = process.env.OWNER_PASSWORD_HASH || process.env.OWNER_PASSWORD;
-  const db = process.env.DATABASE_URL;
+  const db = process.env.DATABASE_URL || process.env.STORAGE_URL || process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL;
   if (!pw || !db) return null;
   const digest = await crypto.subtle.digest("SHA-256", enc.encode(`game-vault-session|${db}|${pw}`));
   return b64url(new Uint8Array(digest));
