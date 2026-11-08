@@ -16,6 +16,7 @@ export const CHART_OF_ACCOUNTS: AccountDef[] = [
   { code: "1000", name: "Cash on Hand", type: "ASSET", category: "CASH" },
   { code: "1010", name: "Bank / Card Settlements", type: "ASSET", category: "CASH" },
   { code: "1100", name: "Accounts Receivable", type: "ASSET", category: "AR" },
+  { code: "1150", name: "Loans Receivable", type: "ASSET", category: "LOANS_RECEIVABLE" },
   { code: "1200", name: "Inventory – Devices", type: "ASSET", category: "INVENTORY" },
   { code: "1210", name: "Inventory – Parts", type: "ASSET", category: "PARTS_INVENTORY" },
   { code: "1220", name: "Repair Work in Progress", type: "ASSET", category: "WIP" },
