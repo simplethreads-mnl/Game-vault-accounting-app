@@ -28,14 +28,14 @@ tools.
 1. On the Vercel dashboard, click **Add New… → Project**.
 2. Find **game-vault-accounting-app** and click **Import**.
    If you don't see it, click **Adjust GitHub App Permissions** and give Vercel access to that repository.
-3. **Don't click Deploy yet.** Open **Environment Variables** and add these:
-
-   | Name | Value |
-   |---|---|
-   | `OWNER_PASSWORD` | the password you'll sign in with (at least 10 characters, and not one you use anywhere else) |
-   | `APP_USER` | your name, as it should appear in the audit trail (optional) |
-
-4. Click **Deploy**. **The first deploy will fail**, because there's no database yet. That's
+3. Depending on Vercel's current layout, you'll see one of two screens:
+   - **A form with "Environment Variables":** add `OWNER_PASSWORD` (the password you'll sign in with,
+     at least 10 characters, not one you use anywhere else) and optionally `APP_USER` (your name for the
+     audit trail). Then click **Deploy**.
+   - **"Project created… Optional Integrations: Prisma Postgres":** **don't** add Prisma Postgres
+     (this guide uses Neon, which the app is tested with and which has no monthly operations cap).
+     Just click **Deploy**. You'll add the password in step 3.5.
+4. **The first deploy will fail** with "DATABASE_URL is not set", because there's no database yet. That's
    expected. Continue to step 3.
 
 ## Step 3: Add the free database (3 min)
@@ -45,6 +45,8 @@ tools.
 3. Choose the **Free** plan and the region closest to you (e.g. *US East*), then **Create**.
 4. When asked which environments to connect, keep **Production** and **Preview** ticked, then **Connect**.
    This adds `DATABASE_URL` and `DATABASE_URL_UNPOOLED` to your project automatically.
+5. If you didn't add your password in step 2, add it now: **Settings → Environment Variables**, then add
+   `OWNER_PASSWORD` (and optionally `APP_USER`) for **All Environments**, then **Save**.
 
 ## Step 4: Deploy again (3 min)
 
