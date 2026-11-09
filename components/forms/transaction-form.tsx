@@ -10,8 +10,8 @@ import { useApi, type Lookups } from "./use-api";
 
 /** Local calendar date (not UTC) for the date picker default. */
 const today = () => new Date().toLocaleDateString("en-CA");
-/** Entries dated today keep the current time so they sort above earlier entries. */
-const dateForApi = (d: string) => (d === today() ? new Date().toISOString() : d);
+/** Always send the calendar date; entries on the same day are listed newest-first by creation time. */
+const dateForApi = (d: string) => d;
 type State = Record<string, string | boolean>;
 
 export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: { initialType?: string; preset?: State; onDone?: () => void }) {
@@ -154,6 +154,7 @@ export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: {
           <Field label="Unit (leave blank for accessories)" className="sm:col-span-2">
             <NativeSelect value={v("unitId")} onChange={(e) => { const u = lookups?.units.find((x) => x.id === e.target.value); setS((p) => ({ ...p, unitId: e.target.value, amount: u ? String(u.listPrice) : p.amount })); }}>
               <option value="">— Non-serialised sale —</option>
+              {!lookups && <option disabled>Loading…</option>}
               {sellable.map((u) => <option key={u.id} value={u.id}>{u.sku} · {u.model} · list {money(u.listPrice)}</option>)}
             </NativeSelect>
           </Field>
@@ -181,6 +182,7 @@ export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: {
           <Field label="Unit to refurbish">
             <NativeSelect required value={v("unitId")} onChange={set("unitId")}>
               <option value="">Select unit…</option>
+              {!lookups && <option disabled>Loading…</option>}
               {refurbishable.map((u) => <option key={u.id} value={u.id}>{u.sku} · {u.model} · {u.status.replace("_", " ").toLowerCase()} · cost {money(u.costBasis)}</option>)}
             </NativeSelect>
           </Field>
@@ -190,6 +192,7 @@ export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: {
               <div key={i} className="flex gap-2">
                 <NativeSelect value={p.partId} onChange={(e) => setParts((a) => a.map((x, j) => (j === i ? { ...x, partId: e.target.value } : x)))}>
                   <option value="">Select part…</option>
+              {!lookups && <option disabled>Loading…</option>}
                   {lookups?.parts.map((pt) => <option key={pt.id} value={pt.id} disabled={pt.quantity === 0}>{pt.name} · {pt.quantity} on hand · {money(pt.avgCost)}</option>)}
                 </NativeSelect>
                 <Input className="w-20" type="number" min="1" value={p.quantity} onChange={(e) => setParts((a) => a.map((x, j) => (j === i ? { ...x, quantity: e.target.value } : x)))} />
@@ -210,6 +213,7 @@ export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: {
           <Field label="Repair job" className="sm:col-span-2">
             <NativeSelect required value={v("repairId")} onChange={set("repairId")}>
               <option value="">Select job…</option>
+              {!lookups && <option disabled>Loading…</option>}
               {lookups?.repairs.map((r) => <option key={r.id} value={r.id}>{r.jobNumber} · {r.customer} · {r.problem} · {money(r.price)}</option>)}
             </NativeSelect>
           </Field>
@@ -222,6 +226,7 @@ export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: {
           <Field label="Part" className="sm:col-span-2">
             <NativeSelect required value={v("partId")} onChange={set("partId")}>
               <option value="">Select part…</option>
+              {!lookups && <option disabled>Loading…</option>}
               {lookups?.parts.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.sku}) · {p.quantity} on hand</option>)}
               <option value="__new">+ New part…</option>
             </NativeSelect>
@@ -261,6 +266,7 @@ export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: {
           <Field label="Sold unit (optional)" className="sm:col-span-2">
             <NativeSelect value={v("unitId")} onChange={set("unitId")}>
               <option value="">— Not tied to a unit —</option>
+              {!lookups && <option disabled>Loading…</option>}
               {soldUnits.map((u) => <option key={u.id} value={u.id}>{u.sku} · {u.model}</option>)}
             </NativeSelect>
           </Field>
@@ -277,6 +283,7 @@ export function TransactionForm({ initialType = "SALE", preset = {}, onDone }: {
           <Field label="Deposit for repair job (optional)" className="sm:col-span-2">
             <NativeSelect value={v("repairId")} onChange={set("repairId")}>
               <option value="">— Payment against receivables —</option>
+              {!lookups && <option disabled>Loading…</option>}
               {lookups?.repairs.map((r) => <option key={r.id} value={r.id}>{r.jobNumber} · {r.customer}</option>)}
             </NativeSelect>
           </Field>

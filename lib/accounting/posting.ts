@@ -97,13 +97,13 @@ export type TransactionInput = z.input<typeof transactionInput>;
 // ───────────────────────────── Helpers ───────────────────────────────────────
 
 /** Account that receives money in (cash/bank) or AR when on account. */
-const inAccount = (m: PaymentMethod) => (m === "CASH" ? "1000" : m === "ON_ACCOUNT" ? "1100" : "1010");
+export const inAccount = (m: PaymentMethod) => (m === "CASH" ? "1000" : m === "ON_ACCOUNT" ? "1100" : "1010");
 /** Account money leaves from, or AP when on account. */
-const outAccount = (m: PaymentMethod) => (m === "CASH" ? "1000" : m === "ON_ACCOUNT" ? "2000" : "1010");
+export const outAccount = (m: PaymentMethod) => (m === "CASH" ? "1000" : m === "ON_ACCOUNT" ? "2000" : "1010");
 
-const SALES_ACCOUNT: Record<ProductLine, string> = { SWITCH: "4000", IPHONE: "4010", ACCESSORY: "4200", PC_PARTS: "4300" };
-const SALES_CATEGORY: Record<ProductLine, string> = { SWITCH: "SWITCH_SALES", IPHONE: "IPHONE_SALES", ACCESSORY: "ACCESSORY_SALES", PC_PARTS: "PC_PARTS_SALES" };
-const COGS_ACCOUNT: Record<ProductLine, string> = { SWITCH: "5000", IPHONE: "5010", ACCESSORY: "5020", PC_PARTS: "5030" };
+export const SALES_ACCOUNT: Record<ProductLine, string> = { SWITCH: "4000", IPHONE: "4010", ACCESSORY: "4200", PC_PARTS: "4300" };
+export const SALES_CATEGORY: Record<ProductLine, string> = { SWITCH: "SWITCH_SALES", IPHONE: "IPHONE_SALES", ACCESSORY: "ACCESSORY_SALES", PC_PARTS: "PC_PARTS_SALES" };
+export const COGS_ACCOUNT: Record<ProductLine, string> = { SWITCH: "5000", IPHONE: "5010", ACCESSORY: "5020", PC_PARTS: "5030" };
 const isSwitchDevice = (d: string) => d.startsWith("SWITCH") || d === "JOYCON";
 
 export class PostingError extends Error {}

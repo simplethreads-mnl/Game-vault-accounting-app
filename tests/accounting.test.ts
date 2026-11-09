@@ -144,3 +144,17 @@ test("date-picker dates stay on the same calendar day in every timezone", async 
   // full timestamps pass through untouched
   assert.equal(businessDate.parse("2026-11-07T18:30:00.000Z").toISOString(), "2026-11-07T18:30:00.000Z");
 });
+
+test("dates follow Manila time even though servers run on UTC", async () => {
+  const { businessDateString, businessToday, formatDateTime } = await import("../lib/currency");
+  const { shortDate } = await import("../lib/utils");
+  const earlyMorningManila = new Date("2026-12-01T07:30:00+08:00"); // still Nov 30 in UTC
+  assert.equal(businessDateString(earlyMorningManila), "2026-12-01");
+  const t = businessToday(earlyMorningManila);
+  assert.equal(t.getMonth(), 11, "already December for 'this month'");
+  assert.equal(t.getDate(), 1);
+  assert.equal(shortDate(earlyMorningManila), "Dec 1, 2026");
+  assert.match(formatDateTime(earlyMorningManila), /Dec 1, 2026.*7:30/);
+  // a date picked in a form (stored at 12:00 UTC) shows on the same day in Manila
+  assert.equal(shortDate(new Date("2026-11-09T12:00:00Z")), "Nov 9, 2026");
+});

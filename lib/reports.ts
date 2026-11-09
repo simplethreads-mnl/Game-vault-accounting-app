@@ -80,6 +80,7 @@ export async function buildReport(period: ReportPeriod, anchor: Date) {
       method: t.method,
       status: t.status,
       amount: dec(t.amount),
+      editedAt: t.editedAt,
     })),
   };
 }

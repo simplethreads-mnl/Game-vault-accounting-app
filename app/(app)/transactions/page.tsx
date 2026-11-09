@@ -7,6 +7,7 @@ import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { ChartCard, PageHeader } from "@/components/section";
 import { QuickAdd } from "@/components/forms/quick-add";
 import { VoidButton } from "@/components/forms/void-button";
+import { EditTransactionButton, EditedBadge } from "@/components/forms/edit-transaction";
 import { prisma } from "@/lib/db";
 import { dec } from "@/lib/accounting/money";
 import { CATEGORY_LABEL } from "@/lib/accounting/chart";
@@ -48,7 +49,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       </section>
 
       <ChartCard title="History">
-        <Form prefetch={false} className="mb-4 grid gap-2 sm:grid-cols-[1fr_200px_150px_150px_auto]" action="/transactions">
+        <Form prefetch={false} className="mb-4 grid grid-cols-2 gap-2 xl:grid-cols-[1fr_200px_150px_150px_auto] [&>*:first-child]:col-span-2 xl:[&>*:first-child]:col-span-1" action="/transactions">
           <input name="q" aria-label="Search transactions" defaultValue={sp.q} placeholder="Search description, ref, customer, supplier…" className="h-9 rounded-lg border bg-card px-3 text-base sm:text-sm" />
           <select name="type" aria-label="Transaction type filter" defaultValue={sp.type ?? ""} className="h-9 rounded-lg border bg-card px-2 text-base sm:text-sm">
             <option value="">All types</option>
@@ -58,30 +59,86 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
           <input type="date" name="to" defaultValue={sp.to} className="h-9 rounded-lg border bg-card px-2 text-base sm:text-sm" aria-label="To" />
           <button className="h-9 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground">Filter</button>
         </Form>
+        {/* Phones: stacked cards */}
+        <ul className="divide-y md:hidden">
+          {rows.map((t) => {
+            const inflow = MONEY_IN.has(t.type);
+            return (
+              <li key={t.id} className={cn("py-3", t.status === "VOIDED" && "opacity-50")}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium leading-snug">
+                      {t.repair ? <Link prefetch={false} href={`/repairs/${t.repair.id}`} className="hover:underline">{t.description}</Link> : t.description}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {shortDate(t.date)} · <span className="font-mono">{t.reference}</span> · {TX_LABEL[t.type]}
+                      {t.category ? ` · ${CATEGORY_LABEL[t.category] ?? t.category}` : ""}
+                    </p>
+                  </div>
+                  <p className={cn("shrink-0 text-sm font-semibold tabular", inflow && "text-[var(--delta-good)]")}>{inflow ? "+" : "−"}{money(dec(t.amount))}</p>
+                </div>
+                <div className="mt-1.5 flex flex-wrap items-center justify-between gap-1">
+                  <span className="flex flex-wrap gap-1 [&>*]:ml-0">
+                    {t.status === "VOIDED" && <Badge variant="outline">VOID</Badge>}
+                    <EditedBadge editedAt={t.editedAt} editCount={t.editCount} editedBy={t.editedBy} />
+                  </span>
+                  {t.status === "POSTED" && (
+                    <span className="flex gap-0.5">
+                      <EditTransactionButton id={t.id} reference={t.reference} />
+                      <VoidButton id={t.id} reference={t.reference} />
+                    </span>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+        {/* Tablets and laptops: table */}
+        <div className="hidden md:block">
         <Table>
-          <THead><TR><TH>Date</TH><TH>Ref</TH><TH>Type</TH><TH>Description</TH><TH>Category</TH><TH>Party</TH><TH>Method</TH><TH className="text-right">Amount</TH><TH /></TR></THead>
+          <THead><TR><TH>Date</TH><TH className="hidden xl:table-cell">Ref</TH><TH>Type</TH><TH>Description</TH><TH className="hidden lg:table-cell">Category</TH><TH className="hidden xl:table-cell">Party</TH><TH className="hidden xl:table-cell">Method</TH><TH className="text-right">Amount</TH><TH /></TR></THead>
           <TBody>
             {rows.map((t) => {
               const inflow = MONEY_IN.has(t.type);
               return (
                 <TR key={t.id} className={cn(t.status === "VOIDED" && "opacity-50")}>
                   <TD className="whitespace-nowrap text-muted-foreground">{shortDate(t.date)}</TD>
-                  <TD className="font-mono text-xs">{t.reference}</TD>
+                  <TD className="hidden font-mono text-xs xl:table-cell">{t.reference}</TD>
                   <TD><Badge variant={inflow ? "good" : t.type === "REFUND" ? "serious" : "secondary"}>{TX_LABEL[t.type]}</Badge></TD>
-                  <TD className="max-w-[280px] truncate">
-                    {t.repair ? <Link prefetch={false} href={`/repairs/${t.repair.id}`} className="hover:underline">{t.description}</Link> : t.description}
-                    {t.status === "VOIDED" && <Badge variant="outline" className="ml-2">VOID</Badge>}
+                  <TD className="max-w-[320px]">
+                    <span className="block truncate">
+                      {t.repair ? <Link prefetch={false} href={`/repairs/${t.repair.id}`} className="hover:underline">{t.description}</Link> : t.description}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground xl:hidden">
+                      <span className="font-mono">{t.reference}</span>
+                      <span className="lg:hidden">{t.category ? ` · ${CATEGORY_LABEL[t.category] ?? t.category}` : ""}</span>
+                      {` · ${t.method.replace("_", " ").toLowerCase()}`}
+                    </span>
+                    {(t.status === "VOIDED" || t.editedAt) && (
+                      <span className="mt-1 flex flex-wrap gap-1 [&>*]:ml-0">
+                        {t.status === "VOIDED" && <Badge variant="outline">VOID</Badge>}
+                        <EditedBadge editedAt={t.editedAt} editCount={t.editCount} editedBy={t.editedBy} />
+                      </span>
+                    )}
                   </TD>
-                  <TD className="text-muted-foreground">{t.category ? CATEGORY_LABEL[t.category] ?? t.category : "—"}</TD>
-                  <TD className="text-muted-foreground">{t.customer?.name ?? t.supplier?.name ?? "—"}</TD>
-                  <TD className="text-xs text-muted-foreground">{t.method.replace("_", " ").toLowerCase()}</TD>
+                  <TD className="hidden text-muted-foreground lg:table-cell">{t.category ? CATEGORY_LABEL[t.category] ?? t.category : "—"}</TD>
+                  <TD className="hidden text-muted-foreground xl:table-cell">{t.customer?.name ?? t.supplier?.name ?? "—"}</TD>
+                  <TD className="hidden text-xs text-muted-foreground xl:table-cell">{t.method.replace("_", " ").toLowerCase()}</TD>
                   <TD className={cn("text-right font-medium", inflow && "text-[var(--delta-good)]")}>{inflow ? "+" : "−"}{money(dec(t.amount))}</TD>
-                  <TD className="text-right">{t.status === "POSTED" && <VoidButton id={t.id} reference={t.reference} />}</TD>
+                  <TD className="text-right">
+                    {t.status === "POSTED" && (
+                      <div className="flex justify-end gap-0.5">
+                        <EditTransactionButton id={t.id} reference={t.reference} />
+                        <VoidButton id={t.id} reference={t.reference} />
+                      </div>
+                    )}
+                  </TD>
                 </TR>
               );
             })}
           </TBody>
         </Table>
+        </div>
         <div className="flex items-center justify-between pt-4 text-sm">
           <span className="text-muted-foreground">Page {page} of {pages}</span>
           <div className="flex gap-2">

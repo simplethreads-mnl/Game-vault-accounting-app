@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "./db";
 import { money } from "./utils";
+import { businessToday } from "./currency";
 import { CHART_OF_ACCOUNTS, isDebitNormal } from "./accounting/chart";
 import { dec, round2 } from "./accounting/money";
 import {
@@ -30,7 +31,7 @@ export const RANGES: { key: RangeKey; label: string }[] = [
   { key: "12m", label: "Last 12 months" },
 ];
 
-export function resolveRange(key: string | undefined, now = new Date()) {
+export function resolveRange(key: string | undefined, now = businessToday()) {
   const k = (RANGES.find((r) => r.key === key)?.key ?? "12m") as RangeKey;
   const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
   let start: Date;
@@ -90,7 +91,7 @@ export async function parts() {
 
 export async function dashboard(rangeKey?: string) {
   const range = resolveRange(rangeKey);
-  const now = new Date();
+  const now = businessToday();
   const buckets = monthBuckets(now, 12);
   const [rows12, periodRows, prevRows, balNow, balStart, allUnits, allRepairs, allParts] = await Promise.all([
     ledgerRows(buckets[0].start, buckets[11].end),
@@ -136,7 +137,7 @@ export async function dashboard(rangeKey?: string) {
 
   const alerts = [
     ...allParts.filter((p) => p.low).map((p) => ({ level: p.quantity === 0 ? "critical" : "warning", title: `${p.name}: ${p.quantity} left`, detail: `Reorder level ${p.reorderLevel}`, href: "/inventory?tab=parts" })),
-    ...agedUnits.map((u) => ({ level: "serious", title: `${u.model} unsold ${Math.floor((now.getTime() - u.acquiredAt.getTime()) / 86_400_000)} days`, detail: `${u.sku} · cost ${money(u.costBasis, { cents: false })} — consider a price drop`, href: "/inventory" })),
+    ...agedUnits.map((u) => ({ level: "serious", title: `${u.model} unsold ${Math.max(0, Math.floor((now.getTime() - u.acquiredAt.getTime()) / 86_400_000))} days`, detail: `${u.sku} · cost ${money(u.costBasis, { cents: false })} — consider a price drop`, href: "/inventory" })),
     ...overdue.map((r) => ({ level: "warning", title: `${r.jobNumber} overdue`, detail: `${r.customer.name} · ${r.problem}`, href: `/repairs/${r.id}` })),
   ] as { level: "critical" | "serious" | "warning"; title: string; detail: string; href: string }[];
 
@@ -182,7 +183,7 @@ export async function yearlySummary(year: number) {
 
 export async function expenseAnalysis(rangeKey?: string) {
   const range = resolveRange(rangeKey);
-  const now = new Date();
+  const now = businessToday();
   const buckets = monthBuckets(now, 12);
   const [rows, rows12] = await Promise.all([ledgerRows(range.start, range.end), ledgerRows(buckets[0].start, buckets[11].end)]);
   const pnl = computePnL(rows);

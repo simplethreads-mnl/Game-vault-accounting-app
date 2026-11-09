@@ -49,10 +49,14 @@ const api = async (path) => {
 const dialog = () => page.getByRole("dialog");
 /** Pick the <option> whose visible text matches a pattern. */
 async function selectByText(select, pattern) {
-  const value = await select.evaluate((el, src) => {
-    const re = new RegExp(src);
-    return [...el.options].find((o) => re.test(o.textContent ?? ""))?.value ?? null;
-  }, pattern.source);
+  let value = null;
+  for (let i = 0; i < 40 && !value; i++) {
+    value = await select.evaluate((el, src) => {
+      const re = new RegExp(src);
+      return [...el.options].find((o) => re.test(o.textContent ?? ""))?.value ?? null;
+    }, pattern.source);
+    if (!value) await page.waitForTimeout(250);
+  }
   assert.ok(value, `no option matching ${pattern}`);
   await select.selectOption(value);
 }
@@ -116,6 +120,7 @@ await step("Expense form posts and appears in history", async () => {
   await dialog().getByLabel("Paid via").selectOption("CARD");
   await dialog().getByLabel(/^Description/).fill(`${TAG} gas`);
   await post();
+  await page.goto(`${BASE}/transactions?q=${encodeURIComponent(`${TAG} gas`)}`);
   await page.getByRole("cell", { name: `${TAG} gas` }).waitFor();
 });
 
@@ -340,6 +345,34 @@ await step("Repair board shows a new job in the Received column", async () => {
   await page.waitForURL(/\/repairs\/[a-z0-9]+$/);
   await page.goto(BASE + "/repairs");
   await page.getByRole("link", { name: new RegExp(`${TAG} walk-in`) }).first().waitFor();
+});
+
+await step("Edit a transaction: amount and category change, row shows 'Edited · date'", async () => {
+  await page.goto(BASE + "/transactions");
+  await openNewTransaction("EXPENSE");
+  await dialog().getByLabel("Expense category").selectOption("FOOD");
+  await dialog().getByLabel("Amount").fill("120");
+  await dialog().getByLabel(/^Description/).fill(`${TAG} snacks`);
+  await post();
+  await page.goto(`${BASE}/transactions?q=${encodeURIComponent(`${TAG} snacks`)}`);
+  const row = page.getByRole("row", { name: new RegExp(`${TAG} snacks`) });
+  await row.getByRole("button", { name: /^Edit TX-/ }).click();
+  await dialog().getByLabel("Amount").waitFor();
+  await dialog().getByLabel("Amount").fill("135.50");
+  await dialog().getByLabel("Expense category").selectOption("SHIPPING");
+  await dialog().getByLabel("Description").fill(`${TAG} snacks → courier`);
+  await dialog().getByLabel(/Reason for the edit/).fill("wrong receipt");
+  await dialog().getByRole("button", { name: "Save changes" }).click();
+  await expectToast("updated");
+  await dialog().waitFor({ state: "detached" });
+  await page.waitForLoadState("networkidle");
+  const today = new Date().toLocaleDateString("en-US", { timeZone: "Asia/Manila", month: "short", day: "numeric", year: "numeric" });
+  await page.goto(`${BASE}/transactions?q=${encodeURIComponent(`${TAG} snacks`)}`);
+  const edited = page.getByRole("row", { name: new RegExp(`${TAG} snacks → courier`) });
+  await edited.getByText(`Edited · ${today}`).waitFor();
+  await edited.getByText("₱135.50").waitFor();
+  await page.goto(`${BASE}/audit?entity=Transaction`);
+  await page.getByText(/edited \(.*amount.*category.*\) – wrong receipt/).first().waitFor();
 });
 
 await step("Void a transaction from the history list", async () => {

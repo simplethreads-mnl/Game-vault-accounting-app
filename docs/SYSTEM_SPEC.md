@@ -76,6 +76,7 @@ kept separate from series colours and always appear with an icon or label.
 | Owner contribution / draw | Cash / Bank or 3100 Draws | 3000 Capital or Cash / Bank | none |
 | Manual journal | any | any | Must balance |
 | **Void** (any type) | exact reverse of the original | | Original stays visible. Side effects are rolled back where safe. |
+| **Edit** (any type, safe fields only) | reversal of the current entry (at its original date) + corrected entry | | Transaction stamped `editedAt` / `editedBy` / `editCount`, shown as "Edited · date". Before/after go to the audit log. Locked: price of a sold or refurbished unit, multi-item purchases, parts purchases, repair invoices. |
 
 ### Accounting principles applied
 

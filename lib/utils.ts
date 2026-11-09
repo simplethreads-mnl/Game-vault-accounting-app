@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-import { CURRENCY, LOCALE } from "./currency";
+import { CURRENCY, LOCALE, TIMEZONE } from "./currency";
 
 export function money(n: number, opts: { compact?: boolean; cents?: boolean } = {}) {
   const { compact = false, cents = true } = opts;
@@ -28,7 +28,7 @@ export function num(n: number) {
 }
 
 export function shortDate(d: Date | string) {
-  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return new Date(d).toLocaleDateString("en-US", { timeZone: TIMEZONE, month: "short", day: "numeric", year: "numeric" });
 }
 
 export function titleCase(s: string) {

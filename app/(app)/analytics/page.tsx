@@ -9,13 +9,14 @@ import { ClientArea, ClientBars, ClientRanked } from "@/components/charts/simple
 import { S } from "@/components/charts/theme";
 import { dashboard, yearlySummary } from "@/lib/queries";
 import { PRODUCT_LINE_LABEL } from "@/lib/labels";
+import { businessToday } from "@/lib/currency";
 import { cn, money, pct } from "@/lib/utils";
 
 export const metadata = { title: "Analytics" };
 
 export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ range?: string; year?: string }> }) {
   const sp = await searchParams;
-  const thisYear = new Date().getFullYear();
+  const thisYear = businessToday().getFullYear();
   const year = Number(sp.year ?? thisYear);
   const [d, y, py] = await Promise.all([dashboard(sp.range ?? "12m"), yearlySummary(year), yearlySummary(year - 1)]);
   const u = d.unitStats;

@@ -4,7 +4,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Report } from "./reports";
 
-import { CURRENCY, CURRENCY_SYMBOL, LOCALE } from "./currency";
+import { CURRENCY, CURRENCY_SYMBOL, LOCALE, formatDateTime } from "./currency";
 
 // The PDF's built-in fonts have no ₱ glyph, so PDFs print the ISO code ("PHP 4,500.00").
 const fmt = (n: number) =>
@@ -56,8 +56,8 @@ export function toCSV(r: Report) {
     ["Total Equity", r.balanceSheet.totalEquity.toFixed(2)],
     [],
     ["TRANSACTIONS"],
-    ["Date", "Reference", "Type", "Description", "Party", "Method", "Status", "Amount"],
-    ...r.transactions.map((t) => [d(t.date), t.reference, t.type, t.description, t.party, t.method, t.status, t.amount.toFixed(2)]),
+    ["Date", "Reference", "Type", "Description", "Party", "Method", "Status", "Amount", "Edited"],
+    ...r.transactions.map((t) => [d(t.date), t.reference, t.type, t.description, t.party, t.method, t.status, t.amount.toFixed(2), t.editedAt ? d(t.editedAt) : ""]),
   ];
   return lines.map((l) => l.map(csvCell).join(",")).join("\n");
 }
@@ -107,12 +107,13 @@ export async function toExcel(r: Report) {
     { header: "Party", key: "party", width: 22 },
     { header: "Method", key: "method", width: 12 },
     { header: "Status", key: "status", width: 10 },
+    { header: "Edited", key: "edited", width: 12 },
     { header: "Amount", key: "amount", width: 14, style: { numFmt: money } },
   ];
   tx.getRow(1).font = bold;
   tx.views = [{ state: "frozen", ySplit: 1 }];
-  for (const t of r.transactions) tx.addRow({ ...t, date: d(t.date) });
-  tx.autoFilter = { from: "A1", to: "H1" };
+  for (const t of r.transactions) tx.addRow({ ...t, date: d(t.date), edited: t.editedAt ? d(t.editedAt) : "" });
+  tx.autoFilter = { from: "A1", to: "I1" };
 
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
@@ -171,7 +172,7 @@ export function toPDF(r: Report) {
   doc.addPage();
   autoTable(doc, {
     head: [["Date", "Ref", "Type", "Description", "Amount"]],
-    body: r.transactions.map((t) => [d(t.date), t.reference, t.type.replace(/_/g, " "), t.description + (t.status === "VOIDED" ? " (VOID)" : ""), fmt(t.amount)]),
+    body: r.transactions.map((t) => [d(t.date), t.reference, t.type.replace(/_/g, " "), t.description + (t.status === "VOIDED" ? " (VOID)" : "") + (t.editedAt ? ` (edited ${d(t.editedAt)})` : ""), fmt(t.amount)]),
     theme: "striped",
     headStyles: { fillColor: accent },
     styles: { fontSize: 8 },
@@ -182,7 +183,7 @@ export function toPDF(r: Report) {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(120);
-    doc.text(`Generated ${r.generatedAt.toLocaleString("en-US")} · Page ${i} of ${pages}`, 40, doc.internal.pageSize.getHeight() - 20);
+    doc.text(`Generated ${formatDateTime(r.generatedAt)} · Page ${i} of ${pages}`, 40, doc.internal.pageSize.getHeight() - 20);
   }
   return Buffer.from(doc.output("arraybuffer"));
 }

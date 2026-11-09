@@ -130,6 +130,10 @@ model Transaction {
   entries       JournalEntry[]
   createdBy     String          @default("system")
   createdAt     DateTime        @default(now())
+  /// Set when the transaction is edited after posting (ledger corrected by reversal + re-post)
+  editedAt      DateTime?
+  editedBy      String?
+  editCount     Int             @default(0)
 
   @@index([date])
   @@index([type])

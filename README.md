@@ -112,5 +112,6 @@ tests/                  node:test unit tests
 | Finish a repair | On the job page, add parts and move it to **Completed**. It is invoiced automatically. |
 | Record gas, food, rent… | **Add expense** and pick the category |
 | Pay your technician | **New transaction → Technician payout** |
-| Fix a mistake | Transactions → **Void** (posts a reversal and keeps history) |
+| Fix a typo, wrong amount, date, category or payment method | Transactions → **Edit**. The ledger entry is reversed and re-posted, and the row is marked **Edited · date** |
+| Cancel something entirely | Transactions → **Void** (posts a reversal and keeps history) |
 | Send numbers to your accountant | Reports → pick a period → **PDF / Excel / CSV** |

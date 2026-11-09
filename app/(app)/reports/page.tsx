@@ -1,9 +1,11 @@
 import Form from "next/form";
+import { businessDateString } from "@/lib/currency";
 import Link from "next/link";
 import { CheckCircle2, FileSpreadsheet, FileText, Sheet, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { ChartCard, PageHeader } from "@/components/section";
+import { EditedBadge } from "@/components/forms/edit-transaction";
 import { buildReport, REPORT_PERIODS, type ReportPeriod } from "@/lib/reports";
 import { cn, money, pct, shortDate } from "@/lib/utils";
 
@@ -22,7 +24,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const rawPeriod = Array.isArray(sp.period) ? sp.period[0] : sp.period;
   const period = (REPORT_PERIODS.includes(rawPeriod as ReportPeriod) ? rawPeriod : "monthly") as ReportPeriod;
-  const date = sp.date ?? new Date().toISOString().slice(0, 10);
+  const date = sp.date ?? businessDateString();
   const r = await buildReport(period, new Date(`${date}T12:00:00`));
   const href = (format: string) => `/api/reports?period=${period}&date=${date}&format=${format}`;
   const b = r.balanceSheet;
@@ -96,7 +98,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
           <THead><TR><TH>Date</TH><TH>Ref</TH><TH>Type</TH><TH>Description</TH><TH className="text-right">Amount</TH></TR></THead>
           <TBody>
             {r.transactions.slice(-100).reverse().map((t) => (
-              <TR key={t.reference} className={cn(t.status === "VOIDED" && "opacity-50")}><TD className="whitespace-nowrap">{shortDate(t.date)}</TD><TD className="font-mono text-xs">{t.reference}</TD><TD className="text-xs">{t.type.replace(/_/g, " ").toLowerCase()}</TD><TD className="max-w-[360px] truncate">{t.description}</TD><TD className="text-right">{money(t.amount)}</TD></TR>
+              <TR key={t.reference} className={cn(t.status === "VOIDED" && "opacity-50")}><TD className="whitespace-nowrap">{shortDate(t.date)}</TD><TD className="font-mono text-xs">{t.reference}</TD><TD className="text-xs">{t.type.replace(/_/g, " ").toLowerCase()}</TD><TD className="max-w-[360px] truncate">{t.description}<EditedBadge editedAt={t.editedAt} /></TD><TD className="text-right">{money(t.amount)}</TD></TR>
             ))}
           </TBody>
         </Table>

@@ -6,7 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { ChartCard } from "@/components/section";
 import { RepairControls } from "@/components/forms/repair-forms";
+import { EditedBadge } from "@/components/forms/edit-transaction";
 import { prisma } from "@/lib/db";
+import { formatDateTime } from "@/lib/currency";
 import { dec } from "@/lib/accounting/money";
 import { repairProfit } from "@/lib/accounting/metrics";
 import { DEVICE_LABEL, REPAIR_LABEL, REPAIR_VARIANT, TX_LABEL } from "@/lib/labels";
@@ -56,7 +58,7 @@ export default async function RepairDetail({ params }: { params: Promise<{ id: s
               <li key={h.id} className="text-sm">
                 <span className="absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full bg-primary" />
                 <p className="font-medium">{REPAIR_LABEL[h.to]}</p>
-                <p className="text-xs text-muted-foreground">{h.createdAt.toLocaleString("en-US")} · {h.changedBy}</p>
+                <p className="text-xs text-muted-foreground">{formatDateTime(h.createdAt)} · {h.changedBy}</p>
                 {h.note && <p className="text-xs">{h.note}</p>}
               </li>
             ))}
@@ -77,7 +79,7 @@ export default async function RepairDetail({ params }: { params: Promise<{ id: s
           {j.transactions.length ? (
             <Table>
               <THead><TR><TH>Ref</TH><TH>Type</TH><TH>Date</TH><TH className="text-right">Amount</TH></TR></THead>
-              <TBody>{j.transactions.map((t) => <TR key={t.id}><TD className="font-mono text-xs">{t.reference}</TD><TD>{TX_LABEL[t.type]}{t.status === "VOIDED" && <Badge variant="outline" className="ml-1">Void</Badge>}</TD><TD>{shortDate(t.date)}</TD><TD className="text-right">{money(dec(t.amount))}</TD></TR>)}</TBody>
+              <TBody>{j.transactions.map((t) => <TR key={t.id}><TD className="font-mono text-xs">{t.reference}</TD><TD>{TX_LABEL[t.type]}{t.status === "VOIDED" && <Badge variant="outline" className="ml-1">Void</Badge>}<EditedBadge editedAt={t.editedAt} editCount={t.editCount} editedBy={t.editedBy} /></TD><TD>{shortDate(t.date)}</TD><TD className="text-right">{money(dec(t.amount))}</TD></TR>)}</TBody>
             </Table>
           ) : <p className="text-sm text-muted-foreground">Nothing posted yet. Completing the job invoices it automatically.</p>}
         </ChartCard>

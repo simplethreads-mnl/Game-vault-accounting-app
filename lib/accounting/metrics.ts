@@ -218,7 +218,7 @@ export function agingBuckets(units: UnitLike[], asOf = new Date()) {
     { label: "90+ days", min: 91, max: Infinity, units: 0, cost: 0 },
   ];
   for (const u of units.filter((x) => UNSOLD.includes(x.status))) {
-    const days = Math.floor((asOf.getTime() - u.acquiredAt.getTime()) / 86_400_000);
+    const days = Math.max(0, Math.floor((asOf.getTime() - u.acquiredAt.getTime()) / 86_400_000));
     const bucket = b.find((x) => days >= x.min && days <= x.max) ?? b[3];
     bucket.units++;
     bucket.cost = round2(bucket.cost + u.costBasis);

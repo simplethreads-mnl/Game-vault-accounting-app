@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { ChartCard, PageHeader } from "@/components/section";
 import { prisma } from "@/lib/db";
+import { formatDateTime } from "@/lib/currency";
 
 export const metadata = { title: "Audit Trail" };
 
@@ -26,7 +27,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
           <TBody>
             {logs.map((l) => (
               <TR key={l.id}>
-                <TD className="whitespace-nowrap text-xs text-muted-foreground">{l.createdAt.toLocaleString("en-US")}</TD>
+                <TD className="whitespace-nowrap text-xs text-muted-foreground">{formatDateTime(l.createdAt)}</TD>
                 <TD>{l.actor}</TD>
                 <TD><Badge variant={VARIANT[l.action] ?? "secondary"}>{l.action.replace("_", " ")}</Badge></TD>
                 <TD className="text-xs text-muted-foreground">{l.entity}</TD>

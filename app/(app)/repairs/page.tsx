@@ -10,6 +10,7 @@ import { NewRepairButton } from "@/components/forms/repair-forms";
 import { repairProfit, repairStats } from "@/lib/accounting/metrics";
 import { DEVICE_LABEL, REPAIR_LABEL, REPAIR_STATUSES, REPAIR_VARIANT } from "@/lib/labels";
 import { repairs } from "@/lib/queries";
+import { businessToday } from "@/lib/currency";
 import { cn, money, pct, shortDate } from "@/lib/utils";
 
 export const metadata = { title: "Repairs" };
@@ -23,7 +24,7 @@ export default async function RepairsPage() {
   const done = recent.filter((j) => j.status === "COMPLETED");
   const avgTurnaround = done.length ? done.reduce((a, j) => a + (j.completedAt!.getTime() - j.receivedAt.getTime()) / 86_400_000, 0) / done.length : 0;
   const board = REPAIR_STATUSES.filter((s) => s.value !== "COMPLETED");
-  const now = new Date();
+  const now = businessToday();
 
   return (
     <div className="space-y-6">

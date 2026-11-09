@@ -100,7 +100,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
             </THead>
             <TBody>
               {list.slice(0, 200).map((u) => {
-                const age = Math.floor(((u.soldAt?.getTime() ?? now) - u.acquiredAt.getTime()) / 86_400_000);
+                const age = Math.max(0, Math.floor(((u.soldAt?.getTime() ?? now) - u.acquiredAt.getTime()) / 86_400_000));
                 const price = u.salePrice ?? u.listPrice;
                 return (
                   <TR key={u.id}>
