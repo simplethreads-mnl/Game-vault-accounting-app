@@ -94,25 +94,72 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
               <Link prefetch={false} key={l} href={qs({ line: k || undefined })} className={cn("rounded-full border px-2.5 py-1 text-xs", (sp.line ?? "") === k ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}>{l}</Link>
             ))}
           </div>
-          <Table>
+          {/* Phones: stacked cards */}
+          <ul className="divide-y md:hidden">
+            {list.slice(0, 200).map((u) => {
+              const age = Math.max(0, Math.floor(((u.soldAt?.getTime() ?? now) - u.acquiredAt.getTime()) / 86_400_000));
+              const price = u.salePrice ?? u.listPrice;
+              const profit = price - u.costBasis;
+              return (
+                <li key={u.id} className="py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium leading-snug">{u.model}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground"><span className="font-mono">{u.sku}</span> · {age}d old</p>
+                    </div>
+                    <Badge variant={UNIT_STATUS_VARIANT[u.status]}>{UNIT_STATUS_LABEL[u.status]}</Badge>
+                  </div>
+                  <dl className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                    <div><dt className="text-muted-foreground">Cost</dt><dd className="font-medium tabular">{money(u.costBasis, { cents: false })}</dd></div>
+                    <div><dt className="text-muted-foreground">{u.salePrice != null ? "Sold for" : "List price"}</dt><dd className="font-medium tabular">{price > 0 ? money(price, { cents: false }) : "—"}</dd></div>
+                    <div><dt className="text-muted-foreground">{u.salePrice != null ? "Profit" : "Est. profit"}</dt><dd className={cn("font-medium tabular", profit < 0 && "text-[#d03b3b]")}>{price > 0 ? money(profit, { cents: false }) : "—"}</dd></div>
+                  </dl>
+                  <div className="mt-2 flex justify-end gap-1.5">
+                    {!["SOLD", "WRITTEN_OFF"].includes(u.status) && <PriceButton id={u.id} sku={u.sku} model={u.model} listPrice={u.listPrice} costBasis={u.costBasis} showLabel />}
+                    {["IN_STOCK", "READY", "RETURNED"].includes(u.status) && <QuickAdd type="SALE" label="Sell" variant="secondary" showLabel preset={{ unitId: u.id, ...(u.listPrice > 0 ? { amount: String(u.listPrice) } : {}) }} />}
+                    {["BROKEN", "IN_REPAIR"].includes(u.status) && <QuickAdd type="REFURBISH" label="Refurbish" variant="secondary" showLabel preset={{ unitId: u.id }} />}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          {/* Tablets and laptops: table */}
+          <div className="hidden md:block">
+          <Table className="table-fixed">
             <THead>
-              <TR><TH>SKU</TH><TH>Model</TH><TH>Status</TH><TH className="text-right">Purchase</TH><TH className="text-right">Cost basis</TH><TH className="text-right">List / Sold</TH><TH className="text-right">Profit</TH><TH className="text-right">Age</TH><TH /></TR>
+              <TR>
+                <TH className="hidden w-[96px] xl:table-cell">SKU</TH>
+                <TH>Model</TH>
+                <TH className="w-[124px]">Status</TH>
+                <TH className="hidden w-[112px] text-right xl:table-cell">Purchase</TH>
+                <TH className="hidden w-[112px] text-right lg:table-cell">Cost basis</TH>
+                <TH className="w-[112px] text-right">List / Sold</TH>
+                <TH className="w-[112px] text-right">Profit</TH>
+                <TH className="hidden w-[64px] text-right lg:table-cell">Age</TH>
+                <TH className="sticky right-0 bg-card w-[132px] sm:w-[188px]"><span className="sr-only">Actions</span></TH>
+              </TR>
             </THead>
             <TBody>
               {list.slice(0, 200).map((u) => {
                 const age = Math.max(0, Math.floor(((u.soldAt?.getTime() ?? now) - u.acquiredAt.getTime()) / 86_400_000));
                 const price = u.salePrice ?? u.listPrice;
                 return (
-                  <TR key={u.id}>
-                    <TD className="font-mono text-xs text-muted-foreground">{u.sku}</TD>
-                    <TD className="font-medium">{u.model}</TD>
-                    <TD><Badge variant={UNIT_STATUS_VARIANT[u.status]}>{UNIT_STATUS_LABEL[u.status]}</Badge></TD>
-                    <TD className="text-right text-muted-foreground">{money(u.purchaseCost)}</TD>
-                    <TD className="text-right">{money(u.costBasis)}</TD>
-                    <TD className="text-right">{money(price)}</TD>
-                    <TD className={cn("text-right font-medium", price - u.costBasis < 0 && "text-[#d03b3b]")}>{money(price - u.costBasis)}{!u.salePrice && <span className="text-[10px] text-muted-foreground"> est.</span>}</TD>
-                    <TD className={cn("text-right", !u.soldAt && age > 60 && "font-medium text-[#ec835a]")}>{age}d</TD>
-                    <TD className="text-right">
+                  <TR key={u.id} className="group">
+                    <TD className="hidden truncate font-mono text-xs text-muted-foreground xl:table-cell">{u.sku}</TD>
+                    <TD className="min-w-0">
+                      <span className="block truncate font-medium" title={u.model}>{u.model}</span>
+                      <span className="block truncate text-xs text-muted-foreground xl:hidden">
+                        <span className="font-mono">{u.sku}</span>
+                        <span className="lg:hidden"> · cost {money(u.costBasis, { cents: false })} · {age}d</span>
+                      </span>
+                    </TD>
+                    <TD><Badge className="whitespace-normal leading-tight" variant={UNIT_STATUS_VARIANT[u.status]}>{UNIT_STATUS_LABEL[u.status]}</Badge></TD>
+                    <TD className="hidden whitespace-nowrap text-right text-muted-foreground xl:table-cell">{money(u.purchaseCost)}</TD>
+                    <TD className="hidden whitespace-nowrap text-right lg:table-cell">{money(u.costBasis)}</TD>
+                    <TD className="whitespace-nowrap text-right">{money(price)}</TD>
+                    <TD className={cn("whitespace-nowrap text-right font-medium", price - u.costBasis < 0 && "text-[#d03b3b]")}>{money(price - u.costBasis)}{!u.salePrice && <span className="text-[10px] text-muted-foreground"> est.</span>}</TD>
+                    <TD className={cn("hidden text-right lg:table-cell", !u.soldAt && age > 60 && "font-medium text-[#ec835a]")}>{age}d</TD>
+                    <TD className="sticky right-0 bg-card shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)] group-hover:bg-muted px-1 text-right">
                       <div className="flex justify-end gap-1.5">
                         {!["SOLD", "WRITTEN_OFF"].includes(u.status) && <PriceButton id={u.id} sku={u.sku} model={u.model} listPrice={u.listPrice} costBasis={u.costBasis} />}
                         {["IN_STOCK", "READY", "RETURNED"].includes(u.status) && <QuickAdd type="SALE" label="Sell" variant="secondary" preset={{ unitId: u.id, ...(u.listPrice > 0 ? { amount: String(u.listPrice) } : {}) }} />}
@@ -124,28 +171,68 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
               })}
             </TBody>
           </Table>
+          </div>
           {list.length > 200 && <p className="pt-3 text-xs text-muted-foreground">Showing 200 of {list.length}. Narrow the filter to see more.</p>}
           <p className="pt-3 text-xs text-muted-foreground">Acquired dates: newest {list[0] ? shortDate(list[0].acquiredAt) : "—"}.</p>
         </ChartCard>
       ) : (
         <ChartCard title="Parts inventory" description={`${partRows.length} SKUs · valued ${money(partRows.reduce((a, p) => a + p.value, 0))} at weighted-average cost`}>
-          <Table>
-            <THead><TR><TH>SKU</TH><TH>Part</TH><TH>Compatible</TH><TH className="text-right">On hand</TH><TH className="text-right">Reorder at</TH><TH className="text-right">Avg cost</TH><TH className="text-right">Value</TH><TH /></TR></THead>
+          {/* Phones: stacked cards */}
+          <ul className="divide-y md:hidden">
+            {partRows.map((p) => (
+              <li key={p.id} className="py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium leading-snug">{p.name}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground"><span className="font-mono">{p.sku}</span>{p.compatible ? ` · ${p.compatible}` : ""}</p>
+                  </div>
+                  {p.low ? <Badge variant={p.quantity === 0 ? "critical" : "warning"}>{p.quantity} · low</Badge> : <Badge variant="secondary">{p.quantity} on hand</Badge>}
+                </div>
+                <div className="mt-2 flex items-end justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">avg {money(p.avgCost)} · value {money(p.value, { cents: false })} · reorder at {p.reorderLevel}</p>
+                  <QuickAdd type="PARTS_PURCHASE" label="Restock" variant="secondary" showLabel preset={{ partId: p.id, unitCost: String(p.avgCost), method: "BANK" }} />
+                </div>
+              </li>
+            ))}
+          </ul>
+          {/* Tablets and laptops: table */}
+          <div className="hidden md:block">
+          <Table className="table-fixed">
+            <THead>
+              <TR>
+                <TH className="hidden w-[120px] xl:table-cell">SKU</TH>
+                <TH>Part</TH>
+                <TH className="hidden w-[150px] lg:table-cell">Compatible</TH>
+                <TH className="w-[96px] text-right">On hand</TH>
+                <TH className="hidden w-[96px] text-right xl:table-cell">Reorder at</TH>
+                <TH className="w-[104px] text-right">Avg cost</TH>
+                <TH className="hidden w-[112px] text-right sm:table-cell">Value</TH>
+                <TH className="sticky right-0 bg-card w-[64px] sm:w-[124px]"><span className="sr-only">Actions</span></TH>
+              </TR>
+            </THead>
             <TBody>
               {partRows.map((p) => (
-                <TR key={p.id}>
-                  <TD className="font-mono text-xs text-muted-foreground">{p.sku}</TD>
-                  <TD className="font-medium">{p.name}</TD>
-                  <TD className="text-muted-foreground">{p.compatible}</TD>
+                <TR key={p.id} className="group">
+                  <TD className="hidden truncate font-mono text-xs text-muted-foreground xl:table-cell">{p.sku}</TD>
+                  <TD className="min-w-0">
+                    <span className="block truncate font-medium" title={p.name}>{p.name}</span>
+                    <span className="block truncate text-xs text-muted-foreground xl:hidden">
+                      <span className="font-mono">{p.sku}</span>
+                      <span className="lg:hidden">{p.compatible ? ` · ${p.compatible}` : ""}</span>
+                      {` · reorder at ${p.reorderLevel}`}
+                    </span>
+                  </TD>
+                  <TD className="hidden truncate text-muted-foreground lg:table-cell">{p.compatible}</TD>
                   <TD className="text-right">{p.low ? <Badge variant={p.quantity === 0 ? "critical" : "warning"}>{p.quantity} · low</Badge> : p.quantity}</TD>
-                  <TD className="text-right text-muted-foreground">{p.reorderLevel}</TD>
-                  <TD className="text-right">{money(p.avgCost)}</TD>
-                  <TD className="text-right">{money(p.value)}</TD>
-                  <TD className="text-right"><QuickAdd type="PARTS_PURCHASE" label="Restock" variant="secondary" preset={{ partId: p.id, unitCost: String(p.avgCost), method: "BANK" }} /></TD>
+                  <TD className="hidden text-right text-muted-foreground xl:table-cell">{p.reorderLevel}</TD>
+                  <TD className="whitespace-nowrap text-right">{money(p.avgCost)}</TD>
+                  <TD className="hidden whitespace-nowrap text-right sm:table-cell">{money(p.value)}</TD>
+                  <TD className="sticky right-0 bg-card shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)] group-hover:bg-muted px-1 text-right"><QuickAdd type="PARTS_PURCHASE" label="Restock" variant="secondary" preset={{ partId: p.id, unitCost: String(p.avgCost), method: "BANK" }} /></TD>
                 </TR>
               ))}
             </TBody>
           </Table>
+          </div>
         </ChartCard>
       )}
     </div>

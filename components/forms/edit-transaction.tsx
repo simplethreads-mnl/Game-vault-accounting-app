@@ -36,7 +36,7 @@ const INCOME_OPTIONS = [
 
 const localDate = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: TIMEZONE });
 
-export function EditTransactionButton({ id, reference }: { id: string; reference: string }) {
+export function EditTransactionButton({ id, reference, compact = false }: { id: string; reference: string; compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<Loaded | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +81,7 @@ export function EditTransactionButton({ id, reference }: { id: string; reference
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) load(); }}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="text-muted-foreground" aria-label={`Edit ${reference}`}><Pencil /> <span className="hidden md:inline">Edit</span></Button>
+        <Button variant="ghost" size="sm" className="text-muted-foreground" aria-label={`Edit ${reference}`} title="Edit"><Pencil /> {!compact && <span>Edit</span>}</Button>
       </DialogTrigger>
       <DialogContent
         title={`Edit ${reference}`}

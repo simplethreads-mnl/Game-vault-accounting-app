@@ -8,7 +8,7 @@ import { money } from "@/lib/utils";
 import { useApi } from "./use-api";
 
 /** Set or change a unit's asking (list) price. Non-financial edit, recorded in the audit trail. */
-export function PriceButton({ id, sku, model, listPrice, costBasis }: { id: string; sku: string; model: string; listPrice: number; costBasis: number }) {
+export function PriceButton({ id, sku, model, listPrice, costBasis, showLabel = false }: { id: string; sku: string; model: string; listPrice: number; costBasis: number; showLabel?: boolean }) {
   const [open, setOpen] = useState(false);
   const [price, setPrice] = useState(listPrice > 0 ? String(listPrice) : "");
   const { call, pending } = useApi();
@@ -17,7 +17,7 @@ export function PriceButton({ id, sku, model, listPrice, costBasis }: { id: stri
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant={listPrice > 0 ? "ghost" : "outline"} aria-label={`Set price for ${sku}`}>
-          <Tag /> <span className="hidden sm:inline">{listPrice > 0 ? "Price" : "Set price"}</span>
+          <Tag /> <span className={showLabel ? "" : "hidden sm:inline"}>{listPrice > 0 ? "Price" : "Set price"}</span>
         </Button>
       </DialogTrigger>
       <DialogContent title={`Asking price · ${model}`} description={`${sku} · cost ${money(costBasis)}. This changes the price you plan to sell at, not your books.`}>

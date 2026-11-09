@@ -95,23 +95,39 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
         </ul>
         {/* Tablets and laptops: table */}
         <div className="hidden md:block">
-        <Table>
-          <THead><TR><TH>Date</TH><TH className="hidden xl:table-cell">Ref</TH><TH>Type</TH><TH>Description</TH><TH className="hidden lg:table-cell">Category</TH><TH className="hidden xl:table-cell">Party</TH><TH className="hidden xl:table-cell">Method</TH><TH className="text-right">Amount</TH><TH /></TR></THead>
+        {/* Fixed layout: the description column absorbs the leftover width (and truncates),
+            so the table never grows past the screen; actions are pinned to the right edge. */}
+        <Table className="table-fixed">
+          <THead>
+            <TR>
+              <TH className="w-[108px]">Date</TH>
+              <TH className="hidden w-[104px] 2xl:table-cell">Ref</TH>
+              <TH className="w-[124px]">Type</TH>
+              <TH>Description</TH>
+              <TH className="hidden w-[150px] lg:table-cell">Category</TH>
+              <TH className="hidden w-[140px] 2xl:table-cell">Party</TH>
+              <TH className="hidden w-[84px] 2xl:table-cell">Method</TH>
+              <TH className="w-[124px] text-right">Amount</TH>
+              <TH className="sticky right-0 w-[124px] bg-card"><span className="sr-only">Actions</span></TH>
+            </TR>
+          </THead>
           <TBody>
             {rows.map((t) => {
               const inflow = MONEY_IN.has(t.type);
+              const party = t.customer?.name ?? t.supplier?.name;
               return (
-                <TR key={t.id} className={cn(t.status === "VOIDED" && "opacity-50")}>
+                <TR key={t.id} className={cn("group", t.status === "VOIDED" && "[&>td:not(:last-child)]:opacity-50")}>
                   <TD className="whitespace-nowrap text-muted-foreground">{shortDate(t.date)}</TD>
-                  <TD className="hidden font-mono text-xs xl:table-cell">{t.reference}</TD>
-                  <TD><Badge variant={inflow ? "good" : t.type === "REFUND" ? "serious" : "secondary"}>{TX_LABEL[t.type]}</Badge></TD>
-                  <TD className="max-w-[320px]">
-                    <span className="block truncate">
+                  <TD className="hidden truncate font-mono text-xs 2xl:table-cell">{t.reference}</TD>
+                  <TD><Badge className="whitespace-normal leading-tight" variant={inflow ? "good" : t.type === "REFUND" ? "serious" : "secondary"}>{TX_LABEL[t.type]}</Badge></TD>
+                  <TD className="min-w-0">
+                    <span className="block truncate" title={t.description}>
                       {t.repair ? <Link prefetch={false} href={`/repairs/${t.repair.id}`} className="hover:underline">{t.description}</Link> : t.description}
                     </span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground xl:hidden">
+                    <span className="mt-0.5 block truncate text-xs text-muted-foreground 2xl:hidden">
                       <span className="font-mono">{t.reference}</span>
                       <span className="lg:hidden">{t.category ? ` · ${CATEGORY_LABEL[t.category] ?? t.category}` : ""}</span>
+                      {party ? ` · ${party}` : ""}
                       {` · ${t.method.replace("_", " ").toLowerCase()}`}
                     </span>
                     {(t.status === "VOIDED" || t.editedAt) && (
@@ -121,14 +137,14 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                       </span>
                     )}
                   </TD>
-                  <TD className="hidden text-muted-foreground lg:table-cell">{t.category ? CATEGORY_LABEL[t.category] ?? t.category : "—"}</TD>
-                  <TD className="hidden text-muted-foreground xl:table-cell">{t.customer?.name ?? t.supplier?.name ?? "—"}</TD>
-                  <TD className="hidden text-xs text-muted-foreground xl:table-cell">{t.method.replace("_", " ").toLowerCase()}</TD>
-                  <TD className={cn("text-right font-medium", inflow && "text-[var(--delta-good)]")}>{inflow ? "+" : "−"}{money(dec(t.amount))}</TD>
-                  <TD className="text-right">
+                  <TD className="hidden truncate text-muted-foreground lg:table-cell">{t.category ? CATEGORY_LABEL[t.category] ?? t.category : "—"}</TD>
+                  <TD className="hidden truncate text-muted-foreground 2xl:table-cell">{party ?? "—"}</TD>
+                  <TD className="hidden text-xs text-muted-foreground 2xl:table-cell">{t.method.replace("_", " ").toLowerCase()}</TD>
+                  <TD className={cn("whitespace-nowrap text-right font-medium", inflow && "text-[var(--delta-good)]")}>{inflow ? "+" : "−"}{money(dec(t.amount))}</TD>
+                  <TD className="sticky right-0 bg-card px-1 text-right shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)] group-hover:bg-muted">
                     {t.status === "POSTED" && (
                       <div className="flex justify-end gap-0.5">
-                        <EditTransactionButton id={t.id} reference={t.reference} />
+                        <EditTransactionButton id={t.id} reference={t.reference} compact />
                         <VoidButton id={t.id} reference={t.reference} />
                       </div>
                     )}
